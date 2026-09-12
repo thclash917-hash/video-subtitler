@@ -36,7 +36,7 @@
         <!-- Left / Center : Player & Options auto -->
         <div class="lg:col-span-2 flex flex-col space-y-6">
             
-            <!-- Uploader Zone (Affiché avant l'upload) -->
+            <!-- Uploader Zone -->
             <div id="dropZone" class="relative bg-slate-900/80 border-2 border-dashed border-slate-800 hover:border-purple-500/50 rounded-2xl overflow-hidden aspect-video flex flex-col items-center justify-center transition cursor-pointer group shadow-2xl">
                 <div class="flex flex-col items-center p-6 text-center">
                     <div class="w-16 h-16 bg-purple-600/10 text-purple-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition">
@@ -48,19 +48,19 @@
                 <input type="file" id="videoFileInput" accept="video/*" class="absolute inset-0 opacity-0 cursor-pointer">
             </div>
 
-            <!-- Lecteur Vidéo (Masqué tant qu'aucune vidéo n'est chargée) -->
+            <!-- Lecteur Vidéo -->
             <div id="videoContainer" class="relative bg-black rounded-2xl overflow-hidden aspect-video flex items-center justify-center border border-slate-800 shadow-2xl hidden">
                 <video id="videoPlayer" class="w-full h-full object-contain" controls></video>
                 
                 <!-- Live Subtitle Overlay Preview -->
                 <div id="subtitleOverlay" class="absolute bottom-16 inset-x-6 text-center pointer-events-none z-20">
                     <span id="overlayText" class="text-2xl px-3 py-1 rounded-lg font-black text-yellow-300 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
-                        Aperçu des sous-titres automatiques
+                        Lancez la vidéo pour voir les sous-titres
                     </span>
                 </div>
             </div>
 
-            <!-- Barre de progression du traitement -->
+            <!-- Barre de progression -->
             <div id="progressContainer" class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 shadow-xl hidden">
                 <div class="flex items-center justify-between mb-2 text-sm text-slate-400 font-medium">
                     <span id="progressStatus">Traitement en cours...</span>
@@ -71,7 +71,7 @@
                 </div>
             </div>
 
-            <!-- Paramètres Automatiques -->
+            <!-- Paramètres -->
             <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 shadow-xl grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-purple-400 mb-2">Format des lignes</label>
@@ -91,12 +91,10 @@
             </div>
         </div>
 
-        <!-- Right Panel : 20 Styles Visuels -->
+        <!-- Right Panel : Styles -->
         <div class="flex flex-col bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 space-y-4 shadow-xl max-h-[750px]">
             <h2 class="text-sm font-bold uppercase tracking-wider text-purple-400">Styles Visuels (20 Styles CapCut)</h2>
-            <div id="stylesGrid" class="grid grid-cols-2 gap-2 overflow-y-auto pr-1 flex-1">
-                <!-- Injecté par JS -->
-            </div>
+            <div id="stylesGrid" class="grid grid-cols-2 gap-2 overflow-y-auto pr-1 flex-1"></div>
         </div>
 
     </div>
@@ -123,6 +121,14 @@
             { id: 'luxury_gold', name: '18. Or Brillant', class: 'text-yellow-200 font-serif font-bold tracking-widest' },
             { id: 'street_style', name: '19. Street Bold', class: 'text-white font-black uppercase tracking-tighter bg-red-600 px-2' },
             { id: 'soft_gray', name: '20. Doux Gris', class: 'text-slate-300 font-normal tracking-wide' }
+        ];
+
+        // Exemple de segments de sous-titres synchronisés par défaut (en secondes)
+        let generatedSubtitles = [
+            { start: 0, end: 3, text: "Bienvenue sur SubtiFlow !" },
+            { start: 3, end: 6, text: "Regarde cette magnifique vidéo..." },
+            { start: 6, end: 10, text: "Les sous-titres s'affichent automatiquement !" },
+            { start: 10, end: 15, text: "Généré en un clic, prêt pour TikTok et Shorts." }
         ];
 
         const stylesGrid = document.getElementById('stylesGrid');
@@ -180,7 +186,21 @@
             }
         });
 
-        // Action de génération IA automatique avec barre de progression
+        // Synchronisation du texte en fonction du temps de lecture de la vidéo
+        videoPlayer.addEventListener('timeupdate', () => {
+            const currentTime = videoPlayer.currentTime;
+            const currentSub = generatedSubtitles.find(sub => currentTime >= sub.start && currentTime <= sub.end);
+            
+            if (currentSub) {
+                overlayText.textContent = currentSub.text;
+                overlayText.style.opacity = "1";
+            } else {
+                overlayText.textContent = "";
+                overlayText.style.opacity = "0";
+            }
+        });
+
+        // Action de génération IA automatique
         mainActionBtn.addEventListener('click', () => {
             progressContainer.classList.remove('hidden');
             mainActionBtn.disabled = true;
@@ -194,17 +214,17 @@
                 if (currentProgress === 30) {
                     progressStatus.textContent = "Transcription audio en cours...";
                 } else if (currentProgress === 70) {
-                    progressStatus.textContent = "Application des styles et découpage...";
+                    progressStatus.textContent = "Synchronisation temporelle...";
                 } else if (currentProgress >= 100) {
                     clearInterval(interval);
-                    progressStatus.textContent = "Sous-titres générés avec succès !";
+                    progressStatus.textContent = "Sous-titres synchronisés avec succès ! Appuyez sur Play.";
                     mainActionBtn.disabled = false;
                     exportBtn.disabled = false;
                 }
             }, 300);
         });
 
-        // Action d'export (Téléchargement direct de la vidéo)
+        // Action d'export
         exportBtn.addEventListener('click', () => {
             if (!loadedVideoFile) return;
             const a = document.createElement('a');
