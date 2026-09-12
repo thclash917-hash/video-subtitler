@@ -4,18 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Générateur de Sous-Titres Style CapCut</title>
-    <!-- Tailwind CSS pour un design propre -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-950 text-slate-100 min-main flex flex-col items-center justify-center p-6">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-center p-6">
 
     <div class="max-w-xl w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
         <h1 class="text-2xl font-bold mb-2 text-center bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
-            Sous-Titres Style CapCut (Zero Install)
+            Sous-Titres Style CapCut
         </h1>
-        <p class="text-sm text-slate-400 text-center mb-6">100% Gratuit &bull; Hébergé sur GitHub Pages &bull; Sans serveur</p>
+        <p class="text-sm text-slate-400 text-center mb-6">100% Gratuit &bull; GitHub Pages</p>
 
-        <!-- Formulaire -->
         <div class="space-y-4">
             <div>
                 <label class="block text-sm font-medium mb-1">1. Choisir une vidéo (MP4)</label>
@@ -26,25 +24,23 @@
                 <div>
                     <label class="block text-sm font-medium mb-1">Couleur du texte</label>
                     <select id="textColor" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-sm">
-                        <option value="&H00FFFFFF">Blanc</option>
-                        <option value="&H0000FFFF">Jaune</option>
-                        <option value="&H0000FF00">Vert</option>
+                        <option value="white">Blanc</option>
+                        <option value="yellow">Jaune</option>
+                        <option value="green">Vert</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-1">Position</label>
                     <select id="textPosition" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-sm">
-                        <option value="2">Bas</option>
-                        <option value="6">Haut</option>
+                        <option value="bottom">Bas</option>
+                        <option value="top">Haut</option>
                     </select>
                 </div>
             </div>
 
             <div>
-                <label class="block text-sm font-medium mb-1">Texte des sous-titres (Format SRT rapide)</label>
-                <textarea id="subtitleText" rows="4" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm font-mono" placeholder="1
-00:00:00,000 --> 00:00:03,000
-Ceci est un exemple de sous-titre !"></textarea>
+                <label class="block text-sm font-medium mb-1">Texte des sous-titres</label>
+                <textarea id="subtitleText" rows="4" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm font-mono" placeholder="Ceci est un exemple de sous-titre !"></textarea>
             </div>
 
             <button id="processBtn" class="w-full py-3 bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90 font-semibold rounded-xl transition shadow-lg">
@@ -52,10 +48,8 @@ Ceci est un exemple de sous-titre !"></textarea>
             </button>
         </div>
 
-        <!-- Statut -->
         <div id="status" class="mt-4 text-center text-sm text-purple-400 font-medium"></div>
 
-        <!-- Résultat -->
         <div id="resultContainer" class="mt-6 hidden text-center">
             <video id="outputVideo" controls class="w-full rounded-xl mb-4 border border-slate-800"></video>
             <a id="downloadLink" class="inline-block py-2 px-6 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl transition">
@@ -64,10 +58,9 @@ Ceci est un exemple de sous-titre !"></textarea>
         </div>
     </div>
 
-    <!-- Script principal utilisant FFmpeg WebAssembly -->
     <script type="module">
-        import { FFmpeg } from 'https://esm.sh/@ffmpeg/ffmpeg@0.12.10';
-        import { fetchFile, toBlobURL } from 'https://esm.sh/@ffmpeg/util@0.12.2';
+        import { FFmpeg } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/+esm';
+        import { fetchFile, toBlobURL } from 'https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/+esm';
 
         const processBtn = document.getElementById('processBtn');
         const status = document.getElementById('status');
@@ -84,44 +77,33 @@ Ceci est un exemple de sous-titre !"></textarea>
             }
 
             processBtn.disabled = true;
-            status.textContent = "Chargement du moteur vidéo (FFmpeg WebAssembly)...";
+            status.textContent = "Téléchargement du module vidéo (veuillez patienter)...";
 
             try {
                 const ffmpeg = new FFmpeg();
                 
-                // Charger FFmpeg depuis un CDN gratuit
-                const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+                // Utilisation de jsDelivr qui gère mieux les gros fichiers WASM
+                const baseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd';
                 await ffmpeg.load({
                     coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
                     wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
                 });
 
-                status.textContent = "Traitement de la vidéo en cours...";
+                status.textContent = "Traitement de la vidéo...";
 
                 const file = videoInput.files[0];
-                const inputName = 'input.mp4';
-                const srtName = 'subs.srt';
-                const outputName = 'output.mp4';
+                await ffmpeg.writeFile('input.mp4', await fetchFile(file));
+                await ffmpeg.writeFile('subs.srt', `1\n00:00:00,000 --> 00:00:10,000\n${subtitleInput.value}`);
 
-                // Écrire les fichiers dans la mémoire virtuelle du navigateur
-                await ffmpeg.writeFile(inputName, await fetchFile(file));
-                await ffmpeg.writeFile(srtName, subtitleInput.value);
-
-                const color = document.getElementById('textColor').value;
-                const alignment = document.getElementById('textPosition').value;
-
-                // Commande FFmpeg pour incruster les sous-titres (style contour noir + couleur)
                 await ffmpeg.exec([
-                    '-i', inputName,
-                    '-vf', `subtitles=${srtName}:force_style='FontSize=24,PrimaryColour=${color},OutlineColour=&H00000000,Outline=2,Alignment=${alignment}'`,
+                    '-i', 'input.mp4',
+                    '-vf', "subtitles=subs.srt:force_style='FontSize=24,PrimaryColour=&H00FFFF&,Outline=2'",
                     '-c:a', 'copy',
-                    outputName
+                    'output.mp4'
                 ]);
 
-                status.textContent = "Génération terminée !";
-
-                // Récupérer le résultat
-                const data = await ffmpeg.readFile(outputName);
+                status.textContent = "Terminé !";
+                const data = await ffmpeg.readFile('output.mp4');
                 const videoUrl = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
 
                 outputVideo.src = videoUrl;
@@ -131,7 +113,7 @@ Ceci est un exemple de sous-titre !"></textarea>
 
             } catch (err) {
                 console.error(err);
-                status.textContent = "Erreur lors du traitement.";
+                status.textContent = "Erreur : Vérifie la console de ton navigateur (F12).";
             } finally {
                 processBtn.disabled = false;
             }
