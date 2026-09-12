@@ -3,117 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Générateur de Sous-Titres CapCut Style</title>
+    <title>SubtiFlow - Éditeur de Sous-Titres Moderne</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center p-6">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-x-hidden">
 
-    <div class="max-w-3xl w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
-        <h1 class="text-3xl font-extrabold mb-2 text-center bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
-            CapCut Web Subtitler
-        </h1>
-        <p class="text-sm text-slate-400 text-center mb-6">Choisis ton style et génère tes sous-titres automatiques en un clic</p>
-
-        <!-- 1. Upload Vidéo -->
-        <div class="mb-6">
-            <label class="block text-sm font-semibold mb-2 text-purple-400">1. Ta Vidéo</label>
-            <input type="file" id="videoFile" accept="video/mp4,video/mov" class="w-full text-sm text-slate-400 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-500 cursor-pointer bg-slate-800/50 rounded-xl border border-slate-700"/>
+    <!-- Header -->
+    <header class="h-16 border-b border-slate-800/80 flex items-center justify-between px-6 bg-slate-900/50 backdrop-blur sticky top-0 z-50">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-gradient-to-tr from-pink-600 to-purple-600 rounded-xl flex items-center justify-center font-black text-xl shadow-lg shadow-purple-900/40">
+                S
+            </div>
+            <span class="text-xl font-black bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
+                SubtiFlow
+            </span>
         </div>
+        <div class="flex items-center space-x-3">
+            <button id="generateAiBtn" class="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-sm font-bold rounded-xl shadow-lg transition disabled:opacity-50" disabled>
+                <span>Générer les sous-titres IA</span>
+            </button>
+            <button id="exportBtn" class="flex items-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-sm font-bold rounded-xl shadow-lg transition disabled:opacity-50" disabled>
+                <span>Exporter</span>
+            </button>
+        </div>
+    </header>
 
-        <!-- 2. Galerie de Styles Visuels (CapCut style) -->
-        <div class="mb-6">
-            <label class="block text-sm font-semibold mb-2 text-purple-400">2. Choisis ton Style de Sous-titre</label>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 max-h-60 overflow-y-auto p-2 bg-slate-950/50 rounded-xl border border-slate-800">
+    <!-- Workspace -->
+    <div class="flex-1 grid grid-cols-1 lg:grid-cols-3 p-6 gap-6 max-w-[1600px] w-full mx-auto">
+        
+        <!-- Left / Center : Player & Timeline -->
+        <div class="lg:col-span-2 flex flex-col space-y-6">
+            
+            <!-- Video Box / Uploader -->
+            <div id="dropZone" class="relative bg-slate-900/80 border-2 border-dashed border-slate-800 hover:border-purple-500/50 rounded-2xl overflow-hidden aspect-video flex flex-col items-center justify-center transition cursor-pointer group shadow-2xl">
+                <div id="uploadPrompt" class="flex flex-col items-center p-6 text-center">
+                    <div class="w-16 h-16 bg-purple-600/10 text-purple-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition">
+                        📁
+                    </div>
+                    <span class="text-lg font-bold">Glissez-déposez votre vidéo ici</span>
+                    <span class="text-sm text-slate-500 mt-1">MP4, WebM, MOV acceptés</span>
+                </div>
+                <video id="videoPlayer" class="w-full h-full object-contain hidden" controls></video>
                 
-                <!-- Style 1 -->
-                <label class="relative flex flex-col items-center justify-center p-3 bg-slate-800 hover:bg-slate-700 rounded-xl cursor-pointer border-2 border-purple-500 transition">
-                    <input type="radio" name="subtitleStyle" value="classic_yellow" class="absolute top-2 right-2" checked>
-                    <span class="font-black text-yellow-300 text-lg drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">OUI !</span>
-                    <span class="text-xs text-slate-300 mt-1">Jaune Classique</span>
-                </label>
+                <!-- Live Subtitle Overlay Preview -->
+                <div id="subtitleOverlay" class="absolute bottom-10 inset-x-6 text-center pointer-events-none hidden">
+                    <span id="overlayText" class="text-2xl px-3 py-1 rounded-lg font-black text-yellow-300 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+                        Aperçu des sous-titres en direct
+                    </span>
+                </div>
+                
+                <input type="file" id="videoFileInput" accept="video/*" class="absolute inset-0 opacity-0 cursor-pointer">
+            </div>
 
-                <!-- Style 2 -->
-                <label class="relative flex flex-col items-center justify-center p-3 bg-slate-800 hover:bg-slate-700 rounded-xl cursor-pointer border-2 border-transparent transition">
-                    <input type="radio" name="subtitleStyle" value="neon_green" class="absolute top-2 right-2">
-                    <span class="font-extrabold text-emerald-400 text-lg [text-shadow:_0_0_10px_#10b981]">PRO</span>
-                    <span class="text-xs text-slate-300 mt-1">Néon Vert</span>
-                </label>
-
-                <!-- Style 3 -->
-                <label class="relative flex flex-col items-center justify-center p-3 bg-slate-800 hover:bg-slate-700 rounded-xl cursor-pointer border-2 border-transparent transition">
-                    <input type="radio" name="subtitleStyle" value="tiktok_bold" class="absolute top-2 right-2">
-                    <span class="font-black text-white bg-black px-2 py-0.5 rounded text-base">TREND</span>
-                    <span class="text-xs text-slate-300 mt-1">TikTok Fond Noir</span>
-                </label>
-
-                <!-- Style 4 -->
-                <label class="relative flex flex-col items-center justify-center p-3 bg-slate-800 hover:bg-slate-700 rounded-xl cursor-pointer border-2 border-transparent transition">
-                    <input type="radio" name="subtitleStyle" value="cyber_pink" class="absolute top-2 right-2">
-                    <span class="font-black text-pink-500 text-lg drop-shadow-[0_0_8px_#ec4899]">FIRE</span>
-                    <span class="text-xs text-slate-300 mt-1">Cyber Rose</span>
-                </label>
-
-                <!-- Style 5 -->
-                <label class="relative flex flex-col items-center justify-center p-3 bg-slate-800 hover:bg-slate-700 rounded-xl cursor-pointer border-2 border-transparent transition">
-                    <input type="radio" name="subtitleStyle" value="karaoke_blue" class="absolute top-2 right-2">
-                    <span class="font-bold text-cyan-300 text-lg underline decoration-pink-500">BEAST</span>
-                    <span class="text-xs text-slate-300 mt-1">Bleu Souligné</span>
-                </label>
-
-                <!-- Style 6 -->
-                <label class="relative flex flex-col items-center justify-center p-3 bg-slate-800 hover:bg-slate-700 rounded-xl cursor-pointer border-2 border-transparent transition">
-                    <input type="radio" name="subtitleStyle" value="minimal_white" class="absolute top-2 right-2">
-                    <span class="font-medium text-white text-lg">Clean</span>
-                    <span class="text-xs text-slate-300 mt-1">Blanc Minimal</span>
-                </label>
-
-                <!-- Style 7 -->
-                <label class="relative flex flex-col items-center justify-center p-3 bg-slate-800 hover:bg-slate-700 rounded-xl cursor-pointer border-2 border-transparent transition">
-                    <input type="radio" name="subtitleStyle" value="gamer_red" class="absolute top-2 right-2">
-                    <span class="font-black text-red-500 text-lg uppercase italic">Epic</span>
-                    <span class="text-xs text-slate-300 mt-1">Gamer Rouge</span>
-                </label>
-
-                <!-- Style 8 -->
-                <label class="relative flex flex-col items-center justify-center p-3 bg-slate-800 hover:bg-slate-700 rounded-xl cursor-pointer border-2 border-transparent transition">
-                    <input type="radio" name="subtitleStyle" value="gradient_orange" class="absolute top-2 right-2">
-                    <span class="font-bold text-orange-400 text-lg">BOOM</span>
-                    <span class="text-xs text-slate-300 mt-1">Orange Vif</span>
-                </label>
-
+            <!-- Timeline -->
+            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 shadow-xl">
+                <div class="flex items-center justify-between mb-3 text-sm text-slate-400 font-medium">
+                    <span>Timeline interactive</span>
+                    <span id="timeIndicator">00:00 / 00:00</span>
+                </div>
+                <div class="h-16 bg-slate-950 rounded-xl border border-slate-800 flex items-center px-4 relative overflow-x-auto gap-2">
+                    <div class="bg-purple-600/30 border border-purple-500 rounded-lg px-3 py-1 text-xs text-purple-200 truncate cursor-pointer">
+                        00:00 - Bonjour tout le monde !
+                    </div>
+                    <div class="bg-purple-600/30 border border-purple-500 rounded-lg px-3 py-1 text-xs text-purple-200 truncate cursor-pointer">
+                        00:03 - Bienvenue sur SubtiFlow
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Bouton de lancement -->
-        <button id="processBtn" class="w-full py-4 bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90 font-bold text-lg rounded-xl transition shadow-lg">
-            Générer les sous-titres auto
-        </button>
+        <!-- Right Panel : 20 Styles & Subtitles Editor -->
+        <div class="flex flex-col bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 space-y-6 shadow-xl">
+            
+            <!-- 20 Styles Grid -->
+            <div>
+                <h2 class="text-sm font-bold uppercase tracking-wider text-purple-400 mb-3">Styles Visuels (CapCut Mode)</h2>
+                <div id="stylesGrid" class="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+                    <!-- Styles injectés dynamiquement en JS -->
+                </div>
+            </div>
 
-        <div id="status" class="mt-4 text-center text-sm text-purple-400 font-medium"></div>
+            <!-- Segments Editor -->
+            <div class="flex-1 flex flex-col">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-bold uppercase tracking-wider text-purple-400">Éditeur de Segments</h2>
+                    <button id="addSegmentBtn" class="text-xs text-purple-400 hover:underline font-semibold">+ Ajouter</button>
+                </div>
+                <div id="segmentsList" class="space-y-3 overflow-y-auto flex-1 pr-1">
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-2">
+                        <div class="flex items-center justify-between text-xs text-slate-500 font-mono">
+                            <span>00:00.000 → 00:03.000</span>
+                        </div>
+                        <input type="text" value="Bonjour tout le monde !" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-purple-500 segment-input">
+                    </div>
+                </div>
+            </div>
 
-        <!-- Résultat -->
-        <div id="resultContainer" class="mt-6 hidden text-center">
-            <video id="outputVideo" controls class="w-full rounded-xl mb-4 border border-slate-800"></video>
-            <a id="downloadLink" class="inline-block py-3 px-8 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition">
-                Télécharger la vidéo
-            </a>
         </div>
+
     </div>
 
     <script>
-        const processBtn = document.getElementById('processBtn');
-        const status = document.getElementById('status');
-        const videoInput = document.getElementById('videoFile');
-        const resultContainer = document.getElementById('resultContainer');
+        // Liste des 20 styles CapCut
+        const stylesList = [
+            { id: 'yellow_classic', name: '1. Jaune Classique', class: 'text-yellow-300 font-black drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]' },
+            { id: 'tiktok_black', name: '2. TikTok Fond Noir', class: 'text-white bg-black/80 px-3 py-1 rounded font-black' },
+            { id: 'neon_green', name: '3. Néon Vert', class: 'text-emerald-400 font-extrabold [text-shadow:_0_0_10px_#10b981]' },
+            { id: 'cyber_pink', name: '4. Cyber Rose', class: 'text-pink-500 font-black drop-shadow-[0_0_10px_#ec4899]' },
+            { id: 'minimal_white', name: '5. Blanc Minimal', class: 'text-white font-medium' },
+            { id: 'gamer_red', name: '6. Gamer Rouge', class: 'text-red-500 font-black uppercase italic' },
+            { id: 'orange_boom', name: '7. Orange Vif', class: 'text-orange-400 font-bold drop-shadow' },
+            { id: 'blue_underline', name: '8. Bleu Souligné', class: 'text-cyan-300 font-bold underline decoration-pink-500' },
+            { id: 'purple_glow', name: '9. Violet Glow', class: 'text-purple-300 font-black [text-shadow:_0_0_8px_#9333ea]' },
+            { id: 'retro_yellow', name: '10. Rétro Jaune', class: 'text-yellow-400 font-serif italic font-bold' },
+            { id: 'bold_shadow', name: '11. Ombre Forte', class: 'text-white font-black drop-shadow-[3px_3px_0px_#000]' },
+            { id: 'gradient_text', name: '12. Gradient Pop', class: 'bg-gradient-to-r from-pink-500 to-yellow-400 bg-clip-text text-transparent font-black' },
+            { id: 'matrix_green', name: '13. Matrix', class: 'text-green-400 font-mono font-bold' },
+            { id: 'clean_dark', name: '14. Dark Box', class: 'text-slate-100 bg-slate-900/90 px-3 py-1 rounded-lg border border-slate-700 font-semibold' },
+            { id: 'fire_red', name: '15. Feu Intense', class: 'text-amber-500 font-black drop-shadow-[0_2px_6px_#ef4444]' },
+            { id: 'ice_blue', name: '16. Ice Blue', class: 'text-sky-300 font-bold drop-shadow-[0_0_6px_#0ea5e9]' },
+            { id: 'bubble_gum', name: '17. Bubble Gum', class: 'text-pink-300 font-black tracking-wider' },
+            { id: 'luxury_gold', name: '18. Or Brillant', class: 'text-yellow-200 font-serif font-bold tracking-widest' },
+            { id: 'street_style', name: '19. Street Bold', class: 'text-white font-black uppercase tracking-tighter bg-red-600 px-2' },
+            { id: 'soft_gray', name: '20. Doux Gris', class: 'text-slate-300 font-normal tracking-wide' }
+        ];
 
-        processBtn.addEventListener('click', () => {
-            if (!videoInput.files[0]) {
-                alert("Sélectionne une vidéo d'abord !");
-                return;
+        const stylesGrid = document.getElementById('stylesGrid');
+        const videoFileInput = document.getElementById('videoFileInput');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const uploadPrompt = document.getElementById('uploadPrompt');
+        const subtitleOverlay = document.getElementById('subtitleOverlay');
+        const overlayText = document.getElementById('overlayText');
+        const generateAiBtn = document.getElementById('generateAiBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const segmentInputs = document.querySelectorAll('.segment-input');
+
+        // Générer la grille des 20 styles
+        stylesList.forEach((style, index) => {
+            const label = document.createElement('label');
+            label.className = `relative flex flex-col justify-between p-3 bg-slate-950/60 hover:bg-slate-800 rounded-xl cursor-pointer border-2 transition ${index === 0 ? 'border-purple-500 bg-purple-500/10' : 'border-slate-800'}`;
+            label.innerHTML = `
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-[11px] text-slate-400 font-medium">${style.name}</span>
+                    <input type="radio" name="subtitleStyle" value="${style.id}" ${index === 0 ? 'checked' : ''} class="accent-purple-500">
+                </div>
+                <div class="text-sm truncate mt-1 ${style.class}">SubtiFlow</div>
+            `;
+            
+            label.addEventListener('click', () => {
+                document.querySelectorAll('#stylesGrid label').forEach(l => {
+                    l.classList.remove('border-purple-500', 'bg-purple-500/10');
+                    l.classList.add('border-slate-800');
+                });
+                label.classList.remove('border-slate-800');
+                label.classList.add('border-purple-500', 'bg-purple-500/10');
+                label.querySelector('input').checked = true;
+                
+                // Mettre à jour l'aperçu dynamique
+                overlayText.className = `text-2xl px-3 py-1 rounded-lg ${style.class}`;
+            });
+
+            stylesGrid.appendChild(label);
+        });
+
+        // Gestion de l'upload vidéo
+        videoFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                videoPlayer.src = url;
+                videoPlayer.classList.remove('hidden');
+                subtitleOverlay.classList.remove('hidden');
+                uploadPrompt.classList.add('hidden');
+                generateAiBtn.disabled = false;
+                exportBtn.disabled = false;
             }
-            const selectedStyle = document.querySelector('input[name="subtitleStyle"]:checked').value;
-            status.textContent = `Style sélectionné : ${selectedStyle}. Connexion au moteur de rendu...`;
-            // Ici on branchera l'appel vers ton API de traitement Python distante
+        });
+
+        // Synchronisation du texte en direct
+        segmentInputs.forEach(input => {
+            input.addEventListener('input', (e) => {
+                overlayText.textContent = e.target.value || "Aperçu des sous-titres";
+            });
         });
     </script>
 </body>
