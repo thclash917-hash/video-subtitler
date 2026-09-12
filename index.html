@@ -1,308 +1,2038 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SubtiFlow - Éditeur de Sous-Titres Interactif</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Poppins:wght@700;900&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Inter', sans-serif; }</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SubtiFlow — Éditeur de sous-titres</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #0b0d12;
+  --panel: #12151c;
+  --panel2: #181c25;
+  --border: #292f3b;
+  --text: #f5f7fa;
+  --muted: #9299a8;
+  --accent: #7c5cff;
+  --accent2: #6243e8;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 22px;
+  border-bottom: 1px solid var(--border);
+  background: #0d1016;
+}
+
+.logo {
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.logo span {
+  color: var(--accent);
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn {
+  border: 1px solid var(--border);
+  background: var(--panel2);
+  color: var(--text);
+  border-radius: 9px;
+  padding: 9px 14px;
+}
+
+.btn:hover {
+  background: #202531;
+}
+
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.btn.primary:hover {
+  background: var(--accent2);
+}
+
+.main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 270px minmax(400px, 1fr) 330px;
+  min-height: calc(100vh - 64px);
+}
+
+.sidebar {
+  border-right: 1px solid var(--border);
+  background: var(--panel);
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.rightbar {
+  border-left: 1px solid var(--border);
+  background: var(--panel);
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.workspace {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dropzone {
+  margin: 18px;
+  min-height: 130px;
+  border: 2px dashed #3a4150;
+  border-radius: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  transition: .2s;
+}
+
+.dropzone.dragover {
+  border-color: var(--accent);
+  background: rgba(124,92,255,.08);
+}
+
+.dropzone strong {
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.video-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  min-height: 420px;
+}
+
+.preview {
+  position: relative;
+  width: min(900px, 100%);
+  max-height: 65vh;
+  aspect-ratio: 16 / 9;
+  background: #050608;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 15px 50px rgba(0,0,0,.45);
+}
+
+#video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.subtitle-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.subtitle {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 90%;
+  text-align: center;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: white;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.15;
+  text-shadow:
+    2px 2px 0 #000,
+    -2px -2px 0 #000,
+    2px -2px 0 #000,
+    -2px 2px 0 #000;
+}
+
+.subtitle.top {
+  top: 7%;
+}
+
+.subtitle.center {
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.subtitle.bottom {
+  bottom: 8%;
+}
+
+.subtitle.bottom-left {
+  left: 8%;
+  transform: none;
+  bottom: 8%;
+  text-align: left;
+}
+
+.subtitle.bottom-right {
+  left: auto;
+  right: 8%;
+  transform: none;
+  bottom: 8%;
+  text-align: right;
+}
+
+.controls {
+  border-top: 1px solid var(--border);
+  padding: 12px 18px;
+  background: #0e1117;
+}
+
+.control-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+input[type="range"] {
+  width: 100%;
+}
+
+.time {
+  color: var(--muted);
+  font-size: 13px;
+  min-width: 100px;
+}
+
+.section {
+  margin-bottom: 22px;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 10px;
+}
+
+.field {
+  margin-bottom: 12px;
+}
+
+.field label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: #0d1016;
+  color: var(--text);
+  border-radius: 8px;
+  padding: 9px;
+  outline: none;
+}
+
+.field textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--accent);
+}
+
+.style-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.style-card {
+  min-height: 54px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: #0d1016;
+  color: white;
+  padding: 8px;
+  font-size: 12px;
+}
+
+.style-card.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.segments {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.segment {
+  border: 1px solid var(--border);
+  background: #0e1117;
+  border-radius: 9px;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.segment.active {
+  border-color: var(--accent);
+  background: rgba(124,92,255,.08);
+}
+
+.segment-time {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+
+.segment-text {
+  font-size: 13px;
+}
+
+.segment-actions {
+  display: flex;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.small {
+  font-size: 11px;
+  padding: 5px 8px;
+}
+
+.progress {
+  width: 100%;
+  height: 7px;
+  border-radius: 10px;
+  background: #252a34;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.progress-bar {
+  width: 0%;
+  height: 100%;
+  background: var(--accent);
+  transition: width .2s;
+}
+
+.status {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 7px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.filter-preview {
+  filter: none;
+}
+
+@media(max-width:1100px) {
+  .main {
+    grid-template-columns: 220px minmax(350px,1fr);
+  }
+
+  .rightbar {
+    display: none;
+  }
+}
+
+@media(max-width:750px) {
+  .main {
+    display: block;
+  }
+
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .video-area {
+    min-height: 300px;
+  }
+
+  .preview {
+    width: 100%;
+  }
+
+  header {
+    padding: 0 12px;
+  }
+
+  .header-actions .btn:not(.primary) {
+    display: none;
+  }
+}
+</style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-x-hidden">
 
-    <!-- Header -->
-    <header class="h-16 border-b border-slate-800/80 flex items-center justify-between px-6 bg-slate-900/50 backdrop-blur sticky top-0 z-50">
-        <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 bg-gradient-to-tr from-pink-600 to-purple-600 rounded-xl flex items-center justify-center font-black text-xl shadow-lg shadow-purple-900/40">
-                S
-            </div>
-            <span class="text-xl font-black bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-                SubtiFlow
-            </span>
-        </div>
-        <div class="flex items-center space-x-3">
-            <button id="exportBtn" class="flex items-center space-x-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-sm font-bold rounded-xl shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                <span>Télécharger la Vidéo</span>
-            </button>
-            <button id="mainActionBtn" class="flex items-center space-x-2 px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-sm font-bold rounded-xl shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                <span>Générer les sous-titres IA</span>
-            </button>
-        </div>
-    </header>
+<body>
 
-    <!-- Workspace -->
-    <div class="flex-1 grid grid-cols-1 lg:grid-cols-3 p-6 gap-6 max-w-[1600px] w-full mx-auto">
-        
-        <!-- Left / Center : Player & Live Preview Controls -->
-        <div class="lg:col-span-2 flex flex-col space-y-6">
-            
-            <!-- Uploader Zone -->
-            <div id="dropZone" class="relative bg-slate-900/80 border-2 border-dashed border-slate-800 hover:border-purple-500/50 rounded-2xl overflow-hidden aspect-video flex flex-col items-center justify-center transition cursor-pointer group shadow-2xl">
-                <div class="flex flex-col items-center p-6 text-center">
-                    <div class="w-16 h-16 bg-purple-600/10 text-purple-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition">
-                        📁
-                    </div>
-                    <span class="text-lg font-bold">Glissez-déposez votre vidéo ici</span>
-                    <span class="text-sm text-slate-500 mt-1">MP4, WebM, MOV acceptés</span>
-                </div>
-                <input type="file" id="videoFileInput" accept="video/*" class="absolute inset-0 opacity-0 cursor-pointer">
-            </div>
+<div class="app">
 
-            <!-- Lecteur Vidéo & Overlay Dynamique -->
-            <div id="videoContainer" class="relative bg-black rounded-2xl overflow-hidden aspect-video flex items-center justify-center border border-slate-800 shadow-2xl hidden">
-                <video id="videoPlayer" class="w-full h-full object-contain" controls></video>
-                
-                <!-- Live Subtitle Overlay Preview (Positionnable dynamiquement) -->
-                <div id="subtitleOverlayContainer" class="absolute inset-x-6 flex justify-center pointer-events-none z-20 bottom-16">
-                    <div id="overlayText" class="text-2xl px-3 py-1 rounded-lg font-black text-yellow-300 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] text-center transition-all">
-                        Aperçu des sous-titres en direct
-                    </div>
-                </div>
-            </div>
+<header>
+  <div class="logo">Subti<span>Flow</span></div>
 
-            <!-- Barre de progression -->
-            <div id="progressContainer" class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 shadow-xl hidden">
-                <div class="flex items-center justify-between mb-2 text-sm text-slate-400 font-medium">
-                    <span id="progressStatus">Traitement en cours...</span>
-                    <span id="progressPercent">0%</span>
-                </div>
-                <div class="w-full bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-800">
-                    <div id="progressBar" class="bg-gradient-to-r from-purple-600 to-pink-600 h-2.5 w-0 transition-all duration-300"></div>
-                </div>
-            </div>
+  <div class="header-actions">
+    <button class="btn" id="newProject">Nouveau</button>
+    <button class="btn" id="exportSrt">SRT</button>
+    <button class="btn" id="exportVtt">VTT</button>
+    <button class="btn primary" id="exportText">Exporter texte</button>
+  </div>
+</header>
 
-            <!-- Paramètres Temps Réel (Lignes, Position, Taille, Police) -->
-            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 shadow-xl grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-400 mb-2">Lignes max</label>
-                    <select id="lineFormat" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm focus:outline-none focus:border-purple-500">
-                        <option value="2">2 lignes</option>
-                        <option value="1">1 ligne (Shorts)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-400 mb-2">Position</label>
-                    <select id="textPosition" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm focus:outline-none focus:border-purple-500">
-                        <option value="bottom">Bas</option>
-                        <option value="center">Milieu</option>
-                        <option value="top">Haut</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-400 mb-2">Taille du texte</label>
-                    <select id="textSize" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm focus:outline-none focus:border-purple-500">
-                        <option value="text-lg">Petit</option>
-                        <option value="text-2xl" selected>Moyen</option>
-                        <option value="text-4xl">Grand</option>
-                        <option value="text-6xl">Énorme</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-400 mb-2">Police</label>
-                    <select id="textFont" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm focus:outline-none focus:border-purple-500">
-                        <option value="font-sans">Inter (Défaut)</option>
-                        <option value="font-['Poppins']">Poppins</option>
-                        <option value="font-['Montserrat']">Montserrat</option>
-                        <option value="font-mono">Monospace</option>
-                    </select>
-                </div>
-            </div>
-        </div>
+<div class="main">
 
-        <!-- Right Panel : 20 Styles Visuels -->
-        <div class="flex flex-col bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 space-y-4 shadow-xl max-h-[750px]">
-            <h2 class="text-sm font-bold uppercase tracking-wider text-purple-400">Styles Visuels (20 Styles CapCut)</h2>
-            <div id="stylesGrid" class="grid grid-cols-2 gap-2 overflow-y-auto pr-1 flex-1"></div>
-        </div>
+<aside class="sidebar">
+
+  <div class="section">
+    <div class="section-title">Vidéo</div>
+
+    <button class="btn primary" style="width:100%" id="chooseVideo">
+      Importer une vidéo
+    </button>
+
+    <input
+      id="fileInput"
+      type="file"
+      accept="video/*"
+      class="hidden"
+    >
+
+    <div class="status" id="fileInfo">
+      Aucune vidéo
+    </div>
+  </div>
+
+  <div class="section">
+
+    <div class="section-title">
+      Sous-titres
+    </div>
+
+    <button
+      class="btn primary"
+      style="width:100%"
+      id="transcribe"
+    >
+      🎙 Générer les sous-titres
+    </button>
+
+    <div class="progress">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div class="status" id="transcriptionStatus">
+      Prêt
+    </div>
+
+  </div>
+
+  <div class="section">
+
+    <div class="section-title">
+      Segments
+    </div>
+
+    <div id="segments" class="segments"></div>
+
+    <button
+      class="btn"
+      style="width:100%;margin-top:10px"
+      id="addSegment"
+    >
+      + Ajouter un sous-titre
+    </button>
+
+  </div>
+
+</aside>
+
+<main class="workspace">
+
+  <div
+    class="dropzone"
+    id="dropzone"
+  >
+    <strong>Dépose ta vidéo ici</strong>
+    <span>MP4, WebM, MOV...</span>
+  </div>
+
+  <div class="video-area">
+
+    <div class="preview">
+
+      <video
+        id="video"
+        class="filter-preview"
+        playsinline
+        controls
+      ></video>
+
+      <div class="subtitle-layer">
+        <div
+          id="subtitle"
+          class="subtitle bottom"
+        ></div>
+      </div>
 
     </div>
 
-    <script>
-        const stylesList = [
-            { id: 'yellow_classic', name: '1. Jaune Classique', class: 'text-yellow-300 font-black drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]' },
-            { id: 'tiktok_black', name: '2. TikTok Fond Noir', class: 'text-white bg-black/80 px-3 py-1 rounded font-black' },
-            { id: 'neon_green', name: '3. Néon Vert', class: 'text-emerald-400 font-extrabold [text-shadow:_0_0_10px_#10b981]' },
-            { id: 'cyber_pink', name: '4. Cyber Rose', class: 'text-pink-500 font-black drop-shadow-[0_0_10px_#ec4899]' },
-            { id: 'minimal_white', name: '5. Blanc Minimal', class: 'text-white font-medium' },
-            { id: 'gamer_red', name: '6. Gamer Rouge', class: 'text-red-500 font-black uppercase italic' },
-            { id: 'orange_boom', name: '7. Orange Vif', class: 'text-orange-400 font-bold drop-shadow' },
-            { id: 'blue_underline', name: '8. Bleu Souligné', class: 'text-cyan-300 font-bold underline decoration-pink-500' },
-            { id: 'purple_glow', name: '9. Violet Glow', class: 'text-purple-300 font-black [text-shadow:_0_0_8px_#9333ea]' },
-            { id: 'retro_yellow', name: '10. Rétro Jaune', class: 'text-yellow-400 font-serif italic font-bold' },
-            { id: 'bold_shadow', name: '11. Ombre Forte', class: 'text-white font-black drop-shadow-[3px_3px_0px_#000]' },
-            { id: 'gradient_text', name: '12. Gradient Pop', class: 'bg-gradient-to-r from-pink-500 to-yellow-400 bg-clip-text text-transparent font-black' },
-            { id: 'matrix_green', name: '13. Matrix', class: 'text-green-400 font-mono font-bold' },
-            { id: 'clean_dark', name: '14. Dark Box', class: 'text-slate-100 bg-slate-900/90 px-3 py-1 rounded-lg border border-slate-700 font-semibold' },
-            { id: 'fire_red', name: '15. Feu Intense', class: 'text-amber-500 font-black drop-shadow-[0_2px_6px_#ef4444]' },
-            { id: 'ice_blue', name: '16. Ice Blue', class: 'text-sky-300 font-bold drop-shadow-[0_0_6px_#0ea5e9]' },
-            { id: 'bubble_gum', name: '17. Bubble Gum', class: 'text-pink-300 font-black tracking-wider' },
-            { id: 'luxury_gold', name: '18. Or Brillant', class: 'text-yellow-200 font-serif font-bold tracking-widest' },
-            { id: 'street_style', name: '19. Street Bold', class: 'text-white font-black uppercase tracking-tighter bg-red-600 px-2' },
-            { id: 'soft_gray', name: '20. Doux Gris', class: 'text-slate-300 font-normal tracking-wide' }
-        ];
+  </div>
 
-        // Segments dynamiques basés sur la durée réelle de la vidéo chargée
-        let generatedSubtitles = [];
+  <div class="controls">
 
-        const stylesGrid = document.getElementById('stylesGrid');
-        const videoFileInput = document.getElementById('videoFileInput');
-        const videoPlayer = document.getElementById('videoPlayer');
-        const videoContainer = document.getElementById('videoContainer');
-        const dropZone = document.getElementById('dropZone');
-        const overlayText = document.getElementById('overlayText');
-        const subtitleOverlayContainer = document.getElementById('subtitleOverlayContainer');
-        const mainActionBtn = document.getElementById('mainActionBtn');
-        const exportBtn = document.getElementById('exportBtn');
-        const progressContainer = document.getElementById('progressContainer');
-        const progressBar = document.getElementById('progressBar');
-        const progressPercent = document.getElementById('progressPercent');
-        const progressStatus = document.getElementById('progressStatus');
+    <div class="control-row">
 
-        const lineFormatSelect = document.getElementById('lineFormat');
-        const textPositionSelect = document.getElementById('textPosition');
-        const textSizeSelect = document.getElementById('textSize');
-        const textFontSelect = document.getElementById('textFont');
+      <button class="btn" id="playPause">
+        ▶
+      </button>
 
-        let loadedVideoFile = null;
-        let activeStyleClass = stylesList[0].class;
+      <span class="time" id="time">
+        00:00 / 00:00
+      </span>
 
-        // Générer la grille des 20 styles
-        stylesList.forEach((style, index) => {
-            const label = document.createElement('label');
-            label.className = `relative flex flex-col justify-between p-3 bg-slate-950/60 hover:bg-slate-800 rounded-xl cursor-pointer border-2 transition ${index === 0 ? 'border-purple-500 bg-purple-500/10' : 'border-slate-800'}`;
-            label.innerHTML = `
-                <div class="flex items-center justify-between mb-1">
-                    <span class="text-[11px] text-slate-400 font-medium">${style.name}</span>
-                    <input type="radio" name="subtitleStyle" value="${style.id}" ${index === 0 ? 'checked' : ''} class="accent-purple-500">
-                </div>
-                <div class="text-sm truncate mt-1 ${style.class}">SubtiFlow</div>
-            `;
-            
-            label.addEventListener('click', () => {
-                document.querySelectorAll('#stylesGrid label').forEach(l => {
-                    l.classList.remove('border-purple-500', 'bg-purple-500/10');
-                    l.classList.add('border-slate-800');
-                });
-                label.classList.remove('border-slate-800');
-                label.classList.add('border-purple-500', 'bg-purple-500/10');
-                label.querySelector('input').checked = true;
-                
-                activeStyleClass = style.class;
-                updateOverlayStyle();
-            });
+      <input
+        type="range"
+        id="seek"
+        min="0"
+        max="100"
+        value="0"
+      >
 
-            stylesGrid.appendChild(label);
-        });
+    </div>
 
-        // Mise à jour en direct des options visuelles (Taille, Police, Position)
-        function updateOverlayStyle() {
-            const size = textSizeSelect.value;
-            const font = textFontSelect.value;
-            
-            overlayText.className = `${size} ${font} px-3 py-1 rounded-lg text-center transition-all ${activeStyleClass}`;
-            
-            // Position
-            const pos = textPositionSelect.value;
-            subtitleOverlayContainer.className = `absolute inset-x-6 flex justify-center pointer-events-none z-20 ${
-                pos === 'top' ? 'top-6' : pos === 'center' ? 'inset-y-0 items-center' : 'bottom-16'
-            }`;
+  </div>
+
+</main>
+
+<aside class="rightbar">
+
+  <div class="section">
+
+    <div class="section-title">
+      Texte sélectionné
+    </div>
+
+    <div class="field">
+
+      <label>Texte</label>
+
+      <textarea
+        id="editText"
+        placeholder="Sélectionne un sous-titre..."
+      ></textarea>
+
+    </div>
+
+    <div style="display:flex;gap:7px">
+
+      <div class="field" style="flex:1">
+        <label>Début</label>
+        <input id="editStart" type="number" step="0.1">
+      </div>
+
+      <div class="field" style="flex:1">
+        <label>Fin</label>
+        <input id="editEnd" type="number" step="0.1">
+      </div>
+
+    </div>
+
+    <button
+      class="btn primary"
+      style="width:100%"
+      id="saveSegment"
+    >
+      Enregistrer
+    </button>
+
+  </div>
+
+  <div class="section">
+
+    <div class="section-title">
+      Styles
+    </div>
+
+    <div class="style-grid" id="styleGrid"></div>
+
+  </div>
+
+  <div class="section">
+
+    <div class="section-title">
+      Apparence
+    </div>
+
+    <div class="field">
+
+      <label>Couleur</label>
+
+      <input
+        id="textColor"
+        type="color"
+        value="#ffffff"
+      >
+
+    </div>
+
+    <div class="field">
+
+      <label>Taille</label>
+
+      <input
+        id="fontSize"
+        type="range"
+        min="12"
+        max="80"
+        value="32"
+      >
+
+    </div>
+
+    <div class="field">
+
+      <label>Position</label>
+
+      <select id="position">
+        <option value="top">Haut</option>
+        <option value="center">Centre</option>
+        <option value="bottom" selected>Bas</option>
+        <option value="bottom-left">Bas gauche</option>
+        <option value="bottom-right">Bas droite</option>
+      </select>
+
+    </div>
+
+    <div class="field">
+
+      <label>Police</label>
+
+      <select id="fontFamily">
+
+        <option value="Arial">Arial</option>
+        <option value="Inter">Inter</option>
+        <option value="Georgia">Georgia</option>
+        <option value="Verdana">Verdana</option>
+        <option value="Impact">Impact</option>
+        <option value="Trebuchet MS">Trebuchet MS</option>
+
+      </select>
+
+    </div>
+
+    <div class="field">
+
+      <label>Épaisseur</label>
+
+      <select id="fontWeight">
+
+        <option value="400">Normal</option>
+        <option value="600">Semi-gras</option>
+        <option value="700" selected>Gras</option>
+        <option value="900">Très gras</option>
+
+      </select>
+
+    </div>
+
+  </div>
+
+  <div class="section">
+
+    <div class="section-title">
+      Filtre vidéo
+    </div>
+
+    <select id="filter" style="
+      width:100%;
+      background:#0d1016;
+      color:white;
+      border:1px solid #292f3b;
+      padding:9px;
+      border-radius:8px;
+    ">
+
+      <option value="none">Normal</option>
+      <option value="grayscale(1)">Noir et blanc</option>
+      <option value="sepia(1)">Sépia</option>
+      <option value="contrast(1.3)">Contraste</option>
+      <option value="brightness(1.2)">Lumineux</option>
+      <option value="saturate(1.6)">Vif</option>
+      <option value="saturate(.5)">Désaturé</option>
+      <option value="hue-rotate(25deg)">Chaud</option>
+      <option value="hue-rotate(190deg)">Froid</option>
+      <option value="grayscale(.5) contrast(1.2)">Cinéma</option>
+
+    </select>
+
+  </div>
+
+</aside>
+
+</div>
+</div>
+
+<script>
+
+"use strict";
+
+/* =========================================================
+   ÉTAT DE L'APPLICATION
+========================================================= */
+
+const state = {
+
+  videoUrl: null,
+
+  segments: [],
+
+  selectedSegment: -1,
+
+  style: "classic",
+
+  appearance: {
+    color: "#ffffff",
+    fontSize: 32,
+    position: "bottom",
+    fontFamily: "Arial",
+    fontWeight: "700"
+  }
+
+};
+
+
+/* =========================================================
+   ÉLÉMENTS DOM
+========================================================= */
+
+const video =
+  document.getElementById("video");
+
+const fileInput =
+  document.getElementById("fileInput");
+
+const chooseVideo =
+  document.getElementById("chooseVideo");
+
+const dropzone =
+  document.getElementById("dropzone");
+
+const fileInfo =
+  document.getElementById("fileInfo");
+
+const segmentsContainer =
+  document.getElementById("segments");
+
+const subtitle =
+  document.getElementById("subtitle");
+
+const editText =
+  document.getElementById("editText");
+
+const editStart =
+  document.getElementById("editStart");
+
+const editEnd =
+  document.getElementById("editEnd");
+
+const styleGrid =
+  document.getElementById("styleGrid");
+
+const progressBar =
+  document.getElementById("progressBar");
+
+const transcriptionStatus =
+  document.getElementById("transcriptionStatus");
+
+const seek =
+  document.getElementById("seek");
+
+const time =
+  document.getElementById("time");
+
+
+/* =========================================================
+   STYLES
+========================================================= */
+
+const styles = {
+
+  classic: {
+    name: "Classique",
+    color: "#ffffff",
+    background: "transparent",
+    shadow: "2px 2px 0 #000"
+  },
+
+  whiteBox: {
+    name: "Boîte blanche",
+    color: "#111111",
+    background: "#ffffff",
+    shadow: "none"
+  },
+
+  blackBox: {
+    name: "Boîte noire",
+    color: "#ffffff",
+    background: "#000000",
+    shadow: "none"
+  },
+
+  yellow: {
+    name: "Jaune",
+    color: "#ffe600",
+    background: "transparent",
+    shadow: "2px 2px 0 #000"
+  },
+
+  cyan: {
+    name: "Cyan",
+    color: "#00e5ff",
+    background: "transparent",
+    shadow: "2px 2px 0 #000"
+  },
+
+  pink: {
+    name: "Rose",
+    color: "#ff4fd8",
+    background: "transparent",
+    shadow: "2px 2px 0 #000"
+  },
+
+  neon: {
+    name: "Néon",
+    color: "#ffffff",
+    background: "transparent",
+    shadow: "0 0 12px #7c5cff"
+  },
+
+  gaming: {
+    name: "Gaming",
+    color: "#7cff00",
+    background: "#111",
+    shadow: "3px 3px 0 #000"
+  },
+
+  cinema: {
+    name: "Cinéma",
+    color: "#fff",
+    background: "rgba(0,0,0,.65)",
+    shadow: "none"
+  },
+
+  minimal: {
+    name: "Minimal",
+    color: "#fff",
+    background: "transparent",
+    shadow: "none"
+  },
+
+  bold: {
+    name: "Bold",
+    color: "#fff",
+    background: "transparent",
+    shadow: "3px 3px 0 #000"
+  },
+
+  elegant: {
+    name: "Élégant",
+    color: "#f5d99b",
+    background: "transparent",
+    shadow: "1px 1px 3px #000"
+  },
+
+  retro: {
+    name: "Retro",
+    color: "#ffcc66",
+    background: "#502f1f",
+    shadow: "2px 2px 0 #000"
+  },
+
+  cartoon: {
+    name: "Cartoon",
+    color: "#fff",
+    background: "#ff3b30",
+    shadow: "4px 4px 0 #000"
+  },
+
+  pop: {
+    name: "Pop",
+    color: "#fff",
+    background: "#ff2d75",
+    shadow: "3px 3px 0 #000"
+  },
+
+  shadow: {
+    name: "Shadow",
+    color: "#fff",
+    background: "transparent",
+    shadow: "0 5px 18px #000"
+  },
+
+  outline: {
+    name: "Contour",
+    color: "#fff",
+    background: "transparent",
+    shadow: "3px 0 #000,-3px 0 #000,0 3px #000,0 -3px #000"
+  },
+
+  soft: {
+    name: "Soft",
+    color: "#fff",
+    background: "rgba(0,0,0,.35)",
+    shadow: "0 2px 8px #000"
+  },
+
+  karaoke: {
+    name: "Karaoke",
+    color: "#00ff7f",
+    background: "transparent",
+    shadow: "2px 2px 0 #000"
+  },
+
+  modern: {
+    name: "Moderne",
+    color: "#fff",
+    background: "rgba(124,92,255,.8)",
+    shadow: "none"
+  }
+
+};
+
+
+/* =========================================================
+   AFFICHAGE DES STYLES
+========================================================= */
+
+function renderStyles() {
+
+  styleGrid.innerHTML = "";
+
+  Object.entries(styles).forEach(
+    ([key, value]) => {
+
+      const button =
+        document.createElement("button");
+
+      button.className =
+        "style-card" +
+        (state.style === key ? " active" : "");
+
+      button.textContent =
+        value.name;
+
+      button.onclick = () => {
+
+        state.style = key;
+
+        applyAppearance();
+
+        renderStyles();
+
+      };
+
+      styleGrid.appendChild(button);
+
+    }
+  );
+
+}
+
+renderStyles();
+
+
+/* =========================================================
+   IMPORTATION
+========================================================= */
+
+chooseVideo.onclick = () =>
+  fileInput.click();
+
+
+fileInput.onchange = () => {
+
+  const file =
+    fileInput.files[0];
+
+  if (file) {
+
+    loadVideo(file);
+
+  }
+
+};
+
+
+dropzone.addEventListener(
+  "dragover",
+  e => {
+
+    e.preventDefault();
+
+    dropzone.classList.add("dragover");
+
+  }
+);
+
+
+dropzone.addEventListener(
+  "dragleave",
+  () => {
+
+    dropzone.classList.remove("dragover");
+
+  }
+);
+
+
+dropzone.addEventListener(
+  "drop",
+  e => {
+
+    e.preventDefault();
+
+    dropzone.classList.remove("dragover");
+
+    const file =
+      e.dataTransfer.files[0];
+
+    if (
+      file &&
+      file.type.startsWith("video/")
+    ) {
+
+      loadVideo(file);
+
+    }
+
+  }
+);
+
+
+function loadVideo(file) {
+
+  if (state.videoUrl) {
+
+    URL.revokeObjectURL(
+      state.videoUrl
+    );
+
+  }
+
+  state.videoUrl =
+    URL.createObjectURL(file);
+
+  video.src =
+    state.videoUrl;
+
+  fileInfo.textContent =
+    `${file.name} — ${formatBytes(file.size)}`;
+
+  state.segments = [];
+
+  state.selectedSegment = -1;
+
+  renderSegments();
+
+  subtitle.textContent = "";
+
+}
+
+
+/* =========================================================
+   FORMATAGE
+========================================================= */
+
+function formatBytes(bytes) {
+
+  if (!bytes) return "0 B";
+
+  const units =
+    ["B","KB","MB","GB"];
+
+  const i =
+    Math.floor(
+      Math.log(bytes) /
+      Math.log(1024)
+    );
+
+  return (
+    bytes /
+    Math.pow(1024, i)
+  ).toFixed(1)
+  + " "
+  + units[i];
+
+}
+
+
+function formatTime(seconds) {
+
+  seconds =
+    Math.max(0, Number(seconds) || 0);
+
+  const h =
+    Math.floor(seconds / 3600);
+
+  const m =
+    Math.floor(
+      (seconds % 3600) / 60
+    );
+
+  const s =
+    Math.floor(seconds % 60);
+
+  const ms =
+    Math.floor(
+      (seconds % 1) * 1000
+    );
+
+  const pad =
+    n => String(n).padStart(2, "0");
+
+  if (h > 0) {
+
+    return (
+      pad(h) + ":" +
+      pad(m) + ":" +
+      pad(s)
+    );
+
+  }
+
+  return (
+    pad(m) + ":" +
+    pad(s) + "." +
+    String(ms).padStart(3, "0")
+  );
+
+}
+
+
+/* =========================================================
+   SEGMENTS
+========================================================= */
+
+function renderSegments() {
+
+  segmentsContainer.innerHTML = "";
+
+  state.segments.forEach(
+    (segment, index) => {
+
+      const el =
+        document.createElement("div");
+
+      el.className =
+        "segment" +
+        (
+          index === state.selectedSegment
+            ? " active"
+            : ""
+        );
+
+      const t =
+        document.createElement("div");
+
+      t.className =
+        "segment-time";
+
+      t.textContent =
+        `${formatTime(segment.start)} → ${formatTime(segment.end)}`;
+
+      const text =
+        document.createElement("div");
+
+      text.className =
+        "segment-text";
+
+      text.textContent =
+        segment.text;
+
+      el.appendChild(t);
+      el.appendChild(text);
+
+      el.onclick = () => {
+
+        selectSegment(index);
+
+      };
+
+      segmentsContainer.appendChild(el);
+
+    }
+  );
+
+}
+
+
+function selectSegment(index) {
+
+  state.selectedSegment =
+    index;
+
+  const segment =
+    state.segments[index];
+
+  if (!segment) return;
+
+  editText.value =
+    segment.text;
+
+  editStart.value =
+    segment.start;
+
+  editEnd.value =
+    segment.end;
+
+  video.currentTime =
+    segment.start;
+
+  renderSegments();
+
+}
+
+
+/* =========================================================
+   ENREGISTRER SEGMENT
+========================================================= */
+
+document
+  .getElementById("saveSegment")
+  .onclick = () => {
+
+    const index =
+      state.selectedSegment;
+
+    if (index < 0) return;
+
+    const text =
+      editText.value.trim();
+
+    const start =
+      Number(editStart.value);
+
+    const end =
+      Number(editEnd.value);
+
+    if (!text) {
+
+      alert("Le texte ne peut pas être vide.");
+
+      return;
+
+    }
+
+    if (
+      !Number.isFinite(start) ||
+      !Number.isFinite(end) ||
+      end <= start
+    ) {
+
+      alert("Les timings sont invalides.");
+
+      return;
+
+    }
+
+    state.segments[index] = {
+
+      text,
+      start,
+      end
+
+    };
+
+    renderSegments();
+
+    updateSubtitle();
+
+  };
+
+
+/* =========================================================
+   AJOUTER SEGMENT
+========================================================= */
+
+document
+  .getElementById("addSegment")
+  .onclick = () => {
+
+    const current =
+      video.currentTime || 0;
+
+    const segment = {
+
+      text: "Nouveau sous-titre",
+
+      start: current,
+
+      end:
+        Math.min(
+          current + 3,
+          video.duration || current + 3
+        )
+
+    };
+
+    state.segments.push(segment);
+
+    state.segments.sort(
+      (a,b) => a.start - b.start
+    );
+
+    renderSegments();
+
+    selectSegment(
+      state.segments.indexOf(segment)
+    );
+
+  };
+
+
+/* =========================================================
+   SOUS-TITRE ACTIF
+========================================================= */
+
+function getCurrentSegment() {
+
+  const t =
+    video.currentTime;
+
+  return state.segments.find(
+    segment =>
+      t >= segment.start &&
+      t <= segment.end
+  );
+
+}
+
+
+function updateSubtitle() {
+
+  const segment =
+    getCurrentSegment();
+
+  subtitle.textContent =
+    segment
+      ? segment.text
+      : "";
+
+}
+
+
+/* =========================================================
+   APPARENCE
+========================================================= */
+
+function applyAppearance() {
+
+  const selected =
+    styles[state.style];
+
+  subtitle.style.color =
+    state.appearance.color ||
+    selected.color;
+
+  subtitle.style.fontSize =
+    state.appearance.fontSize +
+    "px";
+
+  subtitle.style.fontFamily =
+    state.appearance.fontFamily;
+
+  subtitle.style.fontWeight =
+    state.appearance.fontWeight;
+
+  subtitle.style.background =
+    selected.background;
+
+  subtitle.style.textShadow =
+    selected.shadow;
+
+  subtitle.className =
+    "subtitle " +
+    state.appearance.position;
+
+}
+
+
+document
+  .getElementById("textColor")
+  .oninput = e => {
+
+    state.appearance.color =
+      e.target.value;
+
+    applyAppearance();
+
+  };
+
+
+document
+  .getElementById("fontSize")
+  .oninput = e => {
+
+    state.appearance.fontSize =
+      Number(e.target.value);
+
+    applyAppearance();
+
+  };
+
+
+document
+  .getElementById("position")
+  .onchange = e => {
+
+    state.appearance.position =
+      e.target.value;
+
+    applyAppearance();
+
+  };
+
+
+document
+  .getElementById("fontFamily")
+  .onchange = e => {
+
+    state.appearance.fontFamily =
+      e.target.value;
+
+    applyAppearance();
+
+  };
+
+
+document
+  .getElementById("fontWeight")
+  .onchange = e => {
+
+    state.appearance.fontWeight =
+      e.target.value;
+
+    applyAppearance();
+
+  };
+
+
+/* =========================================================
+   FILTRES
+========================================================= */
+
+document
+  .getElementById("filter")
+  .onchange = e => {
+
+    video.style.filter =
+      e.target.value;
+
+  };
+
+
+/* =========================================================
+   LECTEUR
+========================================================= */
+
+document
+  .getElementById("playPause")
+  .onclick = () => {
+
+    if (video.paused) {
+
+      video.play();
+
+    } else {
+
+      video.pause();
+
+    }
+
+  };
+
+
+video.addEventListener(
+  "play",
+  () => {
+
+    document
+      .getElementById("playPause")
+      .textContent = "❚❚";
+
+  }
+);
+
+
+video.addEventListener(
+  "pause",
+  () => {
+
+    document
+      .getElementById("playPause")
+      .textContent = "▶";
+
+  }
+);
+
+
+video.addEventListener(
+  "timeupdate",
+  () => {
+
+    updateSubtitle();
+
+    if (video.duration) {
+
+      seek.value =
+        (
+          video.currentTime /
+          video.duration
+        ) * 100;
+
+    }
+
+    time.textContent =
+      `${formatTime(video.currentTime)} / ${formatTime(video.duration)}`;
+
+  }
+);
+
+
+seek.oninput = () => {
+
+  if (!video.duration) return;
+
+  video.currentTime =
+    (
+      Number(seek.value) /
+      100
+    ) *
+    video.duration;
+
+};
+
+
+/* =========================================================
+   TRANSCRIPTION
+========================================================= */
+
+document
+  .getElementById("transcribe")
+  .onclick = startTranscription;
+
+
+function startTranscription() {
+
+  if (!video.src) {
+
+    alert("Importe d'abord une vidéo.");
+
+    return;
+
+  }
+
+  const SpeechRecognition =
+    window.SpeechRecognition ||
+    window.webkitSpeechRecognition;
+
+  if (!SpeechRecognition) {
+
+    transcriptionStatus.textContent =
+      "La reconnaissance vocale n'est pas disponible dans ce navigateur.";
+
+    alert(
+      "La transcription automatique n'est pas disponible dans ce navigateur. Essaie Chrome ou Edge."
+    );
+
+    return;
+
+  }
+
+  const recognition =
+    new SpeechRecognition();
+
+  recognition.lang =
+    "fr-FR";
+
+  recognition.continuous =
+    true;
+
+  recognition.interimResults =
+    true;
+
+  state.segments = [];
+
+  progressBar.style.width =
+    "0%";
+
+  transcriptionStatus.textContent =
+    "Écoute en cours...";
+
+  let segmentStart = 0;
+
+  let lastText = "";
+
+  let lastResultTime = 0;
+
+  recognition.onresult =
+    event => {
+
+      let finalText = "";
+
+      for (
+        let i = event.resultIndex;
+        i < event.results.length;
+        i++
+      ) {
+
+        const result =
+          event.results[i];
+
+        if (result.isFinal) {
+
+          finalText +=
+            result[0].transcript;
+
         }
 
-        textSizeSelect.addEventListener('change', updateOverlayStyle);
-        textFontSelect.addEventListener('change', updateOverlayStyle);
-        textPositionSelect.addEventListener('change', updateOverlayStyle);
+      }
 
-        // Gestion de l'upload vidéo & découpage automatique intelligent basé sur la durée réelle
-        videoFileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                loadedVideoFile = file;
-                const url = URL.createObjectURL(file);
-                videoPlayer.src = url;
-                dropZone.classList.add('hidden');
-                videoContainer.classList.remove('hidden');
-                mainActionBtn.disabled = false;
+      if (!finalText.trim()) return;
 
-                videoPlayer.onloadedmetadata = () => {
-                    const duration = videoPlayer.duration;
-                    // Découpage automatique proportionnel à la durée de la vidéo
-                    const step = duration / 4;
-                    const maxLines = lineFormatSelect.value;
-                    
-                    generatedSubtitles = [
-                        { start: 0, end: step, text: maxLines == '1' ? "Bienvenue sur SubtiFlow !" : "Bienvenue sur SubtiFlow !\nGénérez vos sous-titres." },
-                        { start: step, end: step * 2, text: maxLines == '1' ? "Regardez cette vidéo..." : "Regardez cette vidéo...\nStyle dynamique." },
-                        { start: step * 2, end: step * 3, text: maxLines == '1' ? "Synchronisation parfaite !" : "Synchronisation parfaite !\nEn un seul clic." },
-                        { start: step * 3, end: duration, text: maxLines == '1' ? "Prêt pour TikTok et Shorts." : "Prêt pour TikTok et Shorts.\nTéléchargez dès maintenant !" }
-                    ];
-                };
-            }
+      const now =
+        video.currentTime;
+
+      const clean =
+        finalText
+          .replace(/\s+/g, " ")
+          .trim();
+
+      if (
+        clean &&
+        clean !== lastText
+      ) {
+
+        state.segments.push({
+
+          text: clean,
+
+          start:
+            lastResultTime ||
+            Math.max(
+              0,
+              now - 2
+            ),
+
+          end:
+            Math.max(
+              now,
+              (lastResultTime || now) + 1
+            )
+
         });
 
-        // Mise à jour des segments si on change le format 1 ou 2 lignes après chargement
-        lineFormatSelect.addEventListener('change', () => {
-            if (videoPlayer.duration) {
-                const duration = videoPlayer.duration;
-                const step = duration / 4;
-                const maxLines = lineFormatSelect.value;
-                generatedSubtitles = [
-                    { start: 0, end: step, text: maxLines == '1' ? "Bienvenue sur SubtiFlow !" : "Bienvenue sur SubtiFlow !\nGénérez vos sous-titres." },
-                    { start: step, end: step * 2, text: maxLines == '1' ? "Regardez cette vidéo..." : "Regardez cette vidéo...\nStyle dynamique." },
-                    { start: step * 2, end: step * 3, text: maxLines == '1' ? "Synchronisation parfaite !" : "Synchronisation parfaite !\nEn un seul clic." },
-                    { start: step * 3, end: duration, text: maxLines == '1' ? "Prêt pour TikTok et Shorts." : "Prêt pour TikTok et Shorts.\nTéléchargez dès maintenant !" }
-                ];
-            }
-        });
+        lastText =
+          clean;
 
-        // Synchronisation temps réel avec le lecteur vidéo
-        videoPlayer.addEventListener('timeupdate', () => {
-            const currentTime = videoPlayer.currentTime;
-            const currentSub = generatedSubtitles.find(sub => currentTime >= sub.start && currentTime <= sub.end);
-            
-            if (currentSub) {
-                // Remplace les retours à la ligne par des balises <br> pour un affichage sur 1 ou 2 lignes propres
-                overlayText.innerHTML = currentSub.text.replace(/\n/g, '<br>');
-                overlayText.style.opacity = "1";
-            } else {
-                overlayText.textContent = "";
-                overlayText.style.opacity = "0";
-            }
-        });
+        lastResultTime =
+          now;
 
-        // Action de génération IA automatique avec progression fluide
-        mainActionBtn.addEventListener('click', () => {
-            progressContainer.classList.remove('hidden');
-            mainActionBtn.disabled = true;
-            let currentProgress = 0;
+        renderSegments();
 
-            const interval = setInterval(() => {
-                currentProgress += 10;
-                progressBar.style.width = `${currentProgress}%`;
-                progressPercent.textContent = `${currentProgress}%`;
+      }
 
-                if (currentProgress === 30) {
-                    progressStatus.textContent = "Transcription audio intelligente...";
-                } else if (currentProgress === 70) {
-                    progressStatus.textContent = "Application des styles & positions...";
-                } else if (currentProgress >= 100) {
-                    clearInterval(interval);
-                    progressStatus.textContent = "Sous-titres générés ! Appuyez sur Play pour tester.";
-                    mainActionBtn.disabled = false;
-                    exportBtn.disabled = false;
-                }
-            }, 300);
-        });
+      if (video.duration) {
 
-        // Téléchargement direct de la vidéo finale
-        exportBtn.addEventListener('click', () => {
-            if (!loadedVideoFile) return;
-            const a = document.createElement('a');
-            a.href = videoPlayer.src;
-            a.download = `subtiflow_${loadedVideoFile.name}`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        });
-    </script>
+        progressBar.style.width =
+          Math.min(
+            100,
+            (now /
+              video.duration) *
+            100
+          ) + "%";
+
+      }
+
+    };
+
+
+  recognition.onerror =
+    event => {
+
+      transcriptionStatus.textContent =
+        "Erreur : " +
+        event.error;
+
+    };
+
+
+  recognition.onend =
+    () => {
+
+      transcriptionStatus.textContent =
+        "Transcription terminée.";
+
+      progressBar.style.width =
+        "100%";
+
+      state.segments.sort(
+        (a,b) =>
+          a.start - b.start
+      );
+
+      renderSegments();
+
+    };
+
+
+  /*
+    On démarre la vidéo pour que la
+    reconnaissance puisse suivre l'audio.
+  */
+
+  video.currentTime = 0;
+
+  video.play()
+    .catch(() => {});
+
+  recognition.start();
+
+}
+
+
+/* =========================================================
+   EXPORT SRT
+========================================================= */
+
+function createSRT() {
+
+  return state.segments
+    .map(
+      (segment, index) => {
+
+        return (
+          `${index + 1}\n` +
+          `${formatSRTTime(segment.start)} --> ${formatSRTTime(segment.end)}\n` +
+          `${segment.text}\n`
+        );
+
+      }
+    )
+    .join("\n");
+
+}
+
+
+function formatSRTTime(seconds) {
+
+  const total =
+    Math.max(0, seconds);
+
+  const h =
+    Math.floor(total / 3600);
+
+  const m =
+    Math.floor(
+      (total % 3600) / 60
+    );
+
+  const s =
+    Math.floor(total % 60);
+
+  const ms =
+    Math.floor(
+      (total % 1) * 1000
+    );
+
+  const pad =
+    n => String(n).padStart(2,"0");
+
+  return (
+    `${pad(h)}:${pad(m)}:${pad(s)},` +
+    String(ms).padStart(3,"0")
+  );
+
+}
+
+
+/* =========================================================
+   EXPORT VTT
+========================================================= */
+
+function createVTT() {
+
+  return (
+    "WEBVTT\n\n" +
+    state.segments
+      .map(
+        segment =>
+          `${formatVTTTime(segment.start)} --> ${formatVTTTime(segment.end)}\n${segment.text}\n`
+      )
+      .join("\n")
+  );
+
+}
+
+
+function formatVTTTime(seconds) {
+
+  const total =
+    Math.max(0, seconds);
+
+  const h =
+    Math.floor(total / 3600);
+
+  const m =
+    Math.floor(
+      (total % 3600) / 60
+    );
+
+  const s =
+    Math.floor(total % 60);
+
+  const ms =
+    Math.floor(
+      (total % 1) * 1000
+    );
+
+  const pad =
+    n => String(n).padStart(2,"0");
+
+  return (
+    `${pad(h)}:${pad(m)}:${pad(s)}.` +
+    String(ms).padStart(3,"0")
+  );
+
+}
+
+
+/* =========================================================
+   TÉLÉCHARGEMENT
+========================================================= */
+
+function downloadFile(
+  content,
+  filename,
+  type
+) {
+
+  const blob =
+    new Blob(
+      [content],
+      {type}
+    );
+
+  const url =
+    URL.createObjectURL(blob);
+
+  const a =
+    document.createElement("a");
+
+  a.href = url;
+
+  a.download =
+    filename;
+
+  document.body.appendChild(a);
+
+  a.click();
+
+  a.remove();
+
+  setTimeout(
+    () =>
+      URL.revokeObjectURL(url),
+    1000
+  );
+
+}
+
+
+document
+  .getElementById("exportSrt")
+  .onclick = () => {
+
+    if (!state.segments.length) {
+
+      alert("Aucun sous-titre à exporter.");
+
+      return;
+
+    }
+
+    downloadFile(
+      createSRT(),
+      "subtitres.srt",
+      "text/plain;charset=utf-8"
+    );
+
+  };
+
+
+document
+  .getElementById("exportVtt")
+  .onclick = () => {
+
+    if (!state.segments.length) {
+
+      alert("Aucun sous-titre à exporter.");
+
+      return;
+
+    }
+
+    downloadFile(
+      createVTT(),
+      "subtitres.vtt",
+      "text/vtt;charset=utf-8"
+    );
+
+  };
+
+
+document
+  .getElementById("exportText")
+  .onclick = () => {
+
+    if (!state.segments.length) {
+
+      alert("Aucun sous-titre à exporter.");
+
+      return;
+
+    }
+
+    const text =
+      state.segments
+        .map(s => s.text)
+        .join("\n");
+
+    downloadFile(
+      text,
+      "transcription.txt",
+      "text/plain;charset=utf-8"
+    );
+
+  };
+
+
+/* =========================================================
+   NOUVEAU PROJET
+========================================================= */
+
+document
+  .getElementById("newProject")
+  .onclick = () => {
+
+    if (
+      !confirm(
+        "Créer un nouveau projet ?"
+      )
+    ) return;
+
+    state.segments = [];
+
+    state.selectedSegment = -1;
+
+    if (state.videoUrl) {
+
+      URL.revokeObjectURL(
+        state.videoUrl
+      );
+
+    }
+
+    state.videoUrl = null;
+
+    video.removeAttribute("src");
+
+    video.load();
+
+    fileInfo.textContent =
+      "Aucune vidéo";
+
+    subtitle.textContent =
+      "";
+
+    editText.value =
+      "";
+
+    editStart.value =
+      "";
+
+    editEnd.value =
+      "";
+
+    renderSegments();
+
+  };
+
+
+/* =========================================================
+   INITIALISATION
+========================================================= */
+
+applyAppearance();
+
+renderSegments();
+
+</script>
+
 </body>
 </html>
