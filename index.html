@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SubtiFlow - Éditeur de Sous-Titres Moderne</title>
+    <title>SubtiFlow - Générateur Automatique de Sous-Titres</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-    </style>
+    <style>body { font-family: 'Inter', sans-serif; }</style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-x-hidden">
 
@@ -22,93 +20,70 @@
                 SubtiFlow
             </span>
         </div>
-        <div class="flex items-center space-x-3">
-            <button id="generateAiBtn" class="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-sm font-bold rounded-xl shadow-lg transition disabled:opacity-50" disabled>
-                <span>Générer les sous-titres IA</span>
-            </button>
-            <button id="exportBtn" class="flex items-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-sm font-bold rounded-xl shadow-lg transition disabled:opacity-50" disabled>
-                <span>Exporter</span>
-            </button>
-        </div>
+        <button id="mainActionBtn" class="flex items-center space-x-2 px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-sm font-bold rounded-xl shadow-lg transition disabled:opacity-50" disabled>
+            <span>Générer et Exporter la Vidéo</span>
+        </button>
     </header>
 
     <!-- Workspace -->
     <div class="flex-1 grid grid-cols-1 lg:grid-cols-3 p-6 gap-6 max-w-[1600px] w-full mx-auto">
         
-        <!-- Left / Center : Player & Timeline -->
+        <!-- Left / Center : Player & Options auto -->
         <div class="lg:col-span-2 flex flex-col space-y-6">
             
             <!-- Video Box / Uploader -->
-            <div id="dropZone" class="relative bg-slate-900/80 border-2 border-dashed border-slate-800 hover:border-purple-500/50 rounded-2xl overflow-hidden aspect-video flex flex-col items-center justify-center transition cursor-pointer group shadow-2xl">
-                <div id="uploadPrompt" class="flex flex-col items-center p-6 text-center">
+            <div class="relative bg-slate-900/80 border-2 border-dashed border-slate-800 hover:border-purple-500/50 rounded-2xl overflow-hidden aspect-video flex flex-col items-center justify-center transition cursor-pointer group shadow-2xl">
+                <div id="uploadPrompt" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10 bg-slate-950/80">
                     <div class="w-16 h-16 bg-purple-600/10 text-purple-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition">
                         📁
                     </div>
                     <span class="text-lg font-bold">Glissez-déposez votre vidéo ici</span>
                     <span class="text-sm text-slate-500 mt-1">MP4, WebM, MOV acceptés</span>
                 </div>
-                <video id="videoPlayer" class="w-full h-full object-contain hidden" controls></video>
+                
+                <video id="videoPlayer" class="w-full h-full object-contain" controls></video>
                 
                 <!-- Live Subtitle Overlay Preview -->
-                <div id="subtitleOverlay" class="absolute bottom-10 inset-x-6 text-center pointer-events-none hidden">
+                <div id="subtitleOverlay" class="absolute bottom-14 inset-x-6 text-center pointer-events-none z-20">
                     <span id="overlayText" class="text-2xl px-3 py-1 rounded-lg font-black text-yellow-300 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
-                        Aperçu des sous-titres en direct
+                        Aperçu des sous-titres automatiques
                     </span>
                 </div>
                 
-                <input type="file" id="videoFileInput" accept="video/*" class="absolute inset-0 opacity-0 cursor-pointer">
+                <input type="file" id="videoFileInput" accept="video/*" class="absolute inset-0 opacity-0 cursor-pointer z-30">
             </div>
 
-            <!-- Timeline -->
-            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 shadow-xl">
-                <div class="flex items-center justify-between mb-3 text-sm text-slate-400 font-medium">
-                    <span>Timeline interactive</span>
-                    <span id="timeIndicator">00:00 / 00:00</span>
+            <!-- Paramètres Automatiques (1 ou 2 lignes, etc.) -->
+            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 shadow-xl grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-400 mb-2">Format des lignes</label>
+                    <select id="lineFormat" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm focus:outline-none focus:border-purple-500">
+                        <option value="2">Maximum 2 lignes (Recommandé)</option>
+                        <option value="1">1 ligne stricte (Style Shorts)</option>
+                    </select>
                 </div>
-                <div class="h-16 bg-slate-950 rounded-xl border border-slate-800 flex items-center px-4 relative overflow-x-auto gap-2">
-                    <div class="bg-purple-600/30 border border-purple-500 rounded-lg px-3 py-1 text-xs text-purple-200 truncate cursor-pointer">
-                        00:00 - Bonjour tout le monde !
-                    </div>
-                    <div class="bg-purple-600/30 border border-purple-500 rounded-lg px-3 py-1 text-xs text-purple-200 truncate cursor-pointer">
-                        00:03 - Bienvenue sur SubtiFlow
-                    </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-400 mb-2">Position des sous-titres</label>
+                    <select id="textPosition" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm focus:outline-none focus:border-purple-500">
+                        <option value="bottom">Bas de l'écran</option>
+                        <option value="center">Centre</option>
+                        <option value="top">Haut de l'écran</option>
+                    </select>
                 </div>
             </div>
         </div>
 
-        <!-- Right Panel : 20 Styles & Subtitles Editor -->
-        <div class="flex flex-col bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 space-y-6 shadow-xl">
-            
-            <!-- 20 Styles Grid -->
-            <div>
-                <h2 class="text-sm font-bold uppercase tracking-wider text-purple-400 mb-3">Styles Visuels (CapCut Mode)</h2>
-                <div id="stylesGrid" class="grid grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
-                    <!-- Styles injectés dynamiquement en JS -->
-                </div>
+        <!-- Right Panel : 20 Styles Visuels -->
+        <div class="flex flex-col bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 space-y-4 shadow-xl max-h-[700px]">
+            <h2 class="text-sm font-bold uppercase tracking-wider text-purple-400">Styles Visuels (20 Styles CapCut)</h2>
+            <div id="stylesGrid" class="grid grid-cols-2 gap-2 overflow-y-auto pr-1 flex-1">
+                <!-- Injecté par JS -->
             </div>
-
-            <!-- Segments Editor -->
-            <div class="flex-1 flex flex-col">
-                <div class="flex items-center justify-between mb-3">
-                    <h2 class="text-sm font-bold uppercase tracking-wider text-purple-400">Éditeur de Segments</h2>
-                    <button id="addSegmentBtn" class="text-xs text-purple-400 hover:underline font-semibold">+ Ajouter</button>
-                </div>
-                <div id="segmentsList" class="space-y-3 overflow-y-auto flex-1 pr-1">
-                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-2">
-                        <div class="flex items-center justify-between text-xs text-slate-500 font-mono">
-                            <span>00:00.000 → 00:03.000</span>
-                        </div>
-                        <input type="text" value="Bonjour tout le monde !" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-purple-500 segment-input">
-                    </div>
-                </div>
-            </div>
-
         </div>
 
     </div>
 
     <script>
-        // Liste des 20 styles CapCut
         const stylesList = [
             { id: 'yellow_classic', name: '1. Jaune Classique', class: 'text-yellow-300 font-black drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]' },
             { id: 'tiktok_black', name: '2. TikTok Fond Noir', class: 'text-white bg-black/80 px-3 py-1 rounded font-black' },
@@ -136,11 +111,8 @@
         const videoFileInput = document.getElementById('videoFileInput');
         const videoPlayer = document.getElementById('videoPlayer');
         const uploadPrompt = document.getElementById('uploadPrompt');
-        const subtitleOverlay = document.getElementById('subtitleOverlay');
         const overlayText = document.getElementById('overlayText');
-        const generateAiBtn = document.getElementById('generateAiBtn');
-        const exportBtn = document.getElementById('exportBtn');
-        const segmentInputs = document.querySelectorAll('.segment-input');
+        const mainActionBtn = document.getElementById('mainActionBtn');
 
         // Générer la grille des 20 styles
         stylesList.forEach((style, index) => {
@@ -163,32 +135,26 @@
                 label.classList.add('border-purple-500', 'bg-purple-500/10');
                 label.querySelector('input').checked = true;
                 
-                // Mettre à jour l'aperçu dynamique
                 overlayText.className = `text-2xl px-3 py-1 rounded-lg ${style.class}`;
             });
 
             stylesGrid.appendChild(label);
         });
 
-        // Gestion de l'upload vidéo
+        // Gestion de l'upload vidéo et activation du player
         videoFileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
                 const url = URL.createObjectURL(file);
                 videoPlayer.src = url;
-                videoPlayer.classList.remove('hidden');
-                subtitleOverlay.classList.remove('hidden');
                 uploadPrompt.classList.add('hidden');
-                generateAiBtn.disabled = false;
-                exportBtn.disabled = false;
+                mainActionBtn.disabled = false;
             }
         });
 
-        // Synchronisation du texte en direct
-        segmentInputs.forEach(input => {
-            input.addEventListener('input', (e) => {
-                overlayText.textContent = e.target.value || "Aperçu des sous-titres";
-            });
+        // Action unique de génération automatique
+        mainActionBtn.addEventListener('click', () => {
+            alert("Traitement automatique lancé ! Les sous-titres s'appliquent selon vos options.");
         });
     </script>
 </body>
