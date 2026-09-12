@@ -1,5 +1,0 @@
-# 1. Installer les dépendances
-npm install
-
-# 2. Lancer le serveur de développement local
-npm run dev
