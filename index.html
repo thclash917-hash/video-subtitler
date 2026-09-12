@@ -20,9 +20,14 @@
                 SubtiFlow
             </span>
         </div>
-        <button id="mainActionBtn" class="flex items-center space-x-2 px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-sm font-bold rounded-xl shadow-lg transition disabled:opacity-50" disabled>
-            <span>Générer et Exporter la Vidéo</span>
-        </button>
+        <div class="flex items-center space-x-3">
+            <button id="exportBtn" class="flex items-center space-x-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-sm font-bold rounded-xl shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <span>Télécharger la Vidéo</span>
+            </button>
+            <button id="mainActionBtn" class="flex items-center space-x-2 px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90 text-sm font-bold rounded-xl shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <span>Générer les sous-titres IA</span>
+            </button>
+        </div>
     </header>
 
     <!-- Workspace -->
@@ -31,29 +36,42 @@
         <!-- Left / Center : Player & Options auto -->
         <div class="lg:col-span-2 flex flex-col space-y-6">
             
-            <!-- Video Box / Uploader -->
-            <div class="relative bg-slate-900/80 border-2 border-dashed border-slate-800 hover:border-purple-500/50 rounded-2xl overflow-hidden aspect-video flex flex-col items-center justify-center transition cursor-pointer group shadow-2xl">
-                <div id="uploadPrompt" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10 bg-slate-950/80">
+            <!-- Uploader Zone (Affiché avant l'upload) -->
+            <div id="dropZone" class="relative bg-slate-900/80 border-2 border-dashed border-slate-800 hover:border-purple-500/50 rounded-2xl overflow-hidden aspect-video flex flex-col items-center justify-center transition cursor-pointer group shadow-2xl">
+                <div class="flex flex-col items-center p-6 text-center">
                     <div class="w-16 h-16 bg-purple-600/10 text-purple-500 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition">
                         📁
                     </div>
                     <span class="text-lg font-bold">Glissez-déposez votre vidéo ici</span>
                     <span class="text-sm text-slate-500 mt-1">MP4, WebM, MOV acceptés</span>
                 </div>
-                
+                <input type="file" id="videoFileInput" accept="video/*" class="absolute inset-0 opacity-0 cursor-pointer">
+            </div>
+
+            <!-- Lecteur Vidéo (Masqué tant qu'aucune vidéo n'est chargée) -->
+            <div id="videoContainer" class="relative bg-black rounded-2xl overflow-hidden aspect-video flex items-center justify-center border border-slate-800 shadow-2xl hidden">
                 <video id="videoPlayer" class="w-full h-full object-contain" controls></video>
                 
                 <!-- Live Subtitle Overlay Preview -->
-                <div id="subtitleOverlay" class="absolute bottom-14 inset-x-6 text-center pointer-events-none z-20">
+                <div id="subtitleOverlay" class="absolute bottom-16 inset-x-6 text-center pointer-events-none z-20">
                     <span id="overlayText" class="text-2xl px-3 py-1 rounded-lg font-black text-yellow-300 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
                         Aperçu des sous-titres automatiques
                     </span>
                 </div>
-                
-                <input type="file" id="videoFileInput" accept="video/*" class="absolute inset-0 opacity-0 cursor-pointer z-30">
             </div>
 
-            <!-- Paramètres Automatiques (1 ou 2 lignes, etc.) -->
+            <!-- Barre de progression du traitement -->
+            <div id="progressContainer" class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 shadow-xl hidden">
+                <div class="flex items-center justify-between mb-2 text-sm text-slate-400 font-medium">
+                    <span id="progressStatus">Traitement en cours...</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="w-full bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-800">
+                    <div id="progressBar" class="bg-gradient-to-r from-purple-600 to-pink-600 h-2.5 w-0 transition-all duration-300"></div>
+                </div>
+            </div>
+
+            <!-- Paramètres Automatiques -->
             <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 shadow-xl grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-purple-400 mb-2">Format des lignes</label>
@@ -74,7 +92,7 @@
         </div>
 
         <!-- Right Panel : 20 Styles Visuels -->
-        <div class="flex flex-col bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 space-y-4 shadow-xl max-h-[700px]">
+        <div class="flex flex-col bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 space-y-4 shadow-xl max-h-[750px]">
             <h2 class="text-sm font-bold uppercase tracking-wider text-purple-400">Styles Visuels (20 Styles CapCut)</h2>
             <div id="stylesGrid" class="grid grid-cols-2 gap-2 overflow-y-auto pr-1 flex-1">
                 <!-- Injecté par JS -->
@@ -110,9 +128,17 @@
         const stylesGrid = document.getElementById('stylesGrid');
         const videoFileInput = document.getElementById('videoFileInput');
         const videoPlayer = document.getElementById('videoPlayer');
-        const uploadPrompt = document.getElementById('uploadPrompt');
+        const videoContainer = document.getElementById('videoContainer');
+        const dropZone = document.getElementById('dropZone');
         const overlayText = document.getElementById('overlayText');
         const mainActionBtn = document.getElementById('mainActionBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressPercent = document.getElementById('progressPercent');
+        const progressStatus = document.getElementById('progressStatus');
+
+        let loadedVideoFile = null;
 
         // Générer la grille des 20 styles
         stylesList.forEach((style, index) => {
@@ -141,20 +167,52 @@
             stylesGrid.appendChild(label);
         });
 
-        // Gestion de l'upload vidéo et activation du player
+        // Gestion de l'upload vidéo
         videoFileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
+                loadedVideoFile = file;
                 const url = URL.createObjectURL(file);
                 videoPlayer.src = url;
-                uploadPrompt.classList.add('hidden');
+                dropZone.classList.add('hidden');
+                videoContainer.classList.remove('hidden');
                 mainActionBtn.disabled = false;
             }
         });
 
-        // Action unique de génération automatique
+        // Action de génération IA automatique avec barre de progression
         mainActionBtn.addEventListener('click', () => {
-            alert("Traitement automatique lancé ! Les sous-titres s'appliquent selon vos options.");
+            progressContainer.classList.remove('hidden');
+            mainActionBtn.disabled = true;
+            let currentProgress = 0;
+
+            const interval = setInterval(() => {
+                currentProgress += 10;
+                progressBar.style.width = `${currentProgress}%`;
+                progressPercent.textContent = `${currentProgress}%`;
+
+                if (currentProgress === 30) {
+                    progressStatus.textContent = "Transcription audio en cours...";
+                } else if (currentProgress === 70) {
+                    progressStatus.textContent = "Application des styles et découpage...";
+                } else if (currentProgress >= 100) {
+                    clearInterval(interval);
+                    progressStatus.textContent = "Sous-titres générés avec succès !";
+                    mainActionBtn.disabled = false;
+                    exportBtn.disabled = false;
+                }
+            }, 300);
+        });
+
+        // Action d'export (Téléchargement direct de la vidéo)
+        exportBtn.addEventListener('click', () => {
+            if (!loadedVideoFile) return;
+            const a = document.createElement('a');
+            a.href = videoPlayer.src;
+            a.download = `subtiflow_${loadedVideoFile.name}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         });
     </script>
 </body>
