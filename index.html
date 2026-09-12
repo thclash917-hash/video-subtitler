@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SubtiFlow - Générateur Automatique de Sous-Titres</title>
+    <title>SubtiFlow - Éditeur de Sous-Titres Interactif</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Poppins:wght@700;900&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
     <style>body { font-family: 'Inter', sans-serif; }</style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-x-hidden">
@@ -33,7 +33,7 @@
     <!-- Workspace -->
     <div class="flex-1 grid grid-cols-1 lg:grid-cols-3 p-6 gap-6 max-w-[1600px] w-full mx-auto">
         
-        <!-- Left / Center : Player & Options auto -->
+        <!-- Left / Center : Player & Live Preview Controls -->
         <div class="lg:col-span-2 flex flex-col space-y-6">
             
             <!-- Uploader Zone -->
@@ -48,15 +48,15 @@
                 <input type="file" id="videoFileInput" accept="video/*" class="absolute inset-0 opacity-0 cursor-pointer">
             </div>
 
-            <!-- Lecteur Vidéo -->
+            <!-- Lecteur Vidéo & Overlay Dynamique -->
             <div id="videoContainer" class="relative bg-black rounded-2xl overflow-hidden aspect-video flex items-center justify-center border border-slate-800 shadow-2xl hidden">
                 <video id="videoPlayer" class="w-full h-full object-contain" controls></video>
                 
-                <!-- Live Subtitle Overlay Preview -->
-                <div id="subtitleOverlay" class="absolute bottom-16 inset-x-6 text-center pointer-events-none z-20">
-                    <span id="overlayText" class="text-2xl px-3 py-1 rounded-lg font-black text-yellow-300 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
-                        Lancez la vidéo pour voir les sous-titres
-                    </span>
+                <!-- Live Subtitle Overlay Preview (Positionnable dynamiquement) -->
+                <div id="subtitleOverlayContainer" class="absolute inset-x-6 flex justify-center pointer-events-none z-20 bottom-16">
+                    <div id="overlayText" class="text-2xl px-3 py-1 rounded-lg font-black text-yellow-300 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] text-center transition-all">
+                        Aperçu des sous-titres en direct
+                    </div>
                 </div>
             </div>
 
@@ -71,27 +71,45 @@
                 </div>
             </div>
 
-            <!-- Paramètres -->
-            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 shadow-xl grid grid-cols-2 gap-4">
+            <!-- Paramètres Temps Réel (Lignes, Position, Taille, Police) -->
+            <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 shadow-xl grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-400 mb-2">Format des lignes</label>
-                    <select id="lineFormat" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm focus:outline-none focus:border-purple-500">
-                        <option value="2">Maximum 2 lignes (Recommandé)</option>
-                        <option value="1">1 ligne stricte (Style Shorts)</option>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-400 mb-2">Lignes max</label>
+                    <select id="lineFormat" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm focus:outline-none focus:border-purple-500">
+                        <option value="2">2 lignes</option>
+                        <option value="1">1 ligne (Shorts)</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-400 mb-2">Position des sous-titres</label>
-                    <select id="textPosition" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm focus:outline-none focus:border-purple-500">
-                        <option value="bottom">Bas de l'écran</option>
-                        <option value="center">Centre</option>
-                        <option value="top">Haut de l'écran</option>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-400 mb-2">Position</label>
+                    <select id="textPosition" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm focus:outline-none focus:border-purple-500">
+                        <option value="bottom">Bas</option>
+                        <option value="center">Milieu</option>
+                        <option value="top">Haut</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-400 mb-2">Taille du texte</label>
+                    <select id="textSize" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm focus:outline-none focus:border-purple-500">
+                        <option value="text-lg">Petit</option>
+                        <option value="text-2xl" selected>Moyen</option>
+                        <option value="text-4xl">Grand</option>
+                        <option value="text-6xl">Énorme</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-purple-400 mb-2">Police</label>
+                    <select id="textFont" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm focus:outline-none focus:border-purple-500">
+                        <option value="font-sans">Inter (Défaut)</option>
+                        <option value="font-['Poppins']">Poppins</option>
+                        <option value="font-['Montserrat']">Montserrat</option>
+                        <option value="font-mono">Monospace</option>
                     </select>
                 </div>
             </div>
         </div>
 
-        <!-- Right Panel : Styles -->
+        <!-- Right Panel : 20 Styles Visuels -->
         <div class="flex flex-col bg-slate-900/40 border border-slate-800/80 rounded-2xl p-5 space-y-4 shadow-xl max-h-[750px]">
             <h2 class="text-sm font-bold uppercase tracking-wider text-purple-400">Styles Visuels (20 Styles CapCut)</h2>
             <div id="stylesGrid" class="grid grid-cols-2 gap-2 overflow-y-auto pr-1 flex-1"></div>
@@ -123,13 +141,8 @@
             { id: 'soft_gray', name: '20. Doux Gris', class: 'text-slate-300 font-normal tracking-wide' }
         ];
 
-        // Exemple de segments de sous-titres synchronisés par défaut (en secondes)
-        let generatedSubtitles = [
-            { start: 0, end: 3, text: "Bienvenue sur SubtiFlow !" },
-            { start: 3, end: 6, text: "Regarde cette magnifique vidéo..." },
-            { start: 6, end: 10, text: "Les sous-titres s'affichent automatiquement !" },
-            { start: 10, end: 15, text: "Généré en un clic, prêt pour TikTok et Shorts." }
-        ];
+        // Segments dynamiques basés sur la durée réelle de la vidéo chargée
+        let generatedSubtitles = [];
 
         const stylesGrid = document.getElementById('stylesGrid');
         const videoFileInput = document.getElementById('videoFileInput');
@@ -137,6 +150,7 @@
         const videoContainer = document.getElementById('videoContainer');
         const dropZone = document.getElementById('dropZone');
         const overlayText = document.getElementById('overlayText');
+        const subtitleOverlayContainer = document.getElementById('subtitleOverlayContainer');
         const mainActionBtn = document.getElementById('mainActionBtn');
         const exportBtn = document.getElementById('exportBtn');
         const progressContainer = document.getElementById('progressContainer');
@@ -144,7 +158,13 @@
         const progressPercent = document.getElementById('progressPercent');
         const progressStatus = document.getElementById('progressStatus');
 
+        const lineFormatSelect = document.getElementById('lineFormat');
+        const textPositionSelect = document.getElementById('textPosition');
+        const textSizeSelect = document.getElementById('textSize');
+        const textFontSelect = document.getElementById('textFont');
+
         let loadedVideoFile = null;
+        let activeStyleClass = stylesList[0].class;
 
         // Générer la grille des 20 styles
         stylesList.forEach((style, index) => {
@@ -167,13 +187,32 @@
                 label.classList.add('border-purple-500', 'bg-purple-500/10');
                 label.querySelector('input').checked = true;
                 
-                overlayText.className = `text-2xl px-3 py-1 rounded-lg ${style.class}`;
+                activeStyleClass = style.class;
+                updateOverlayStyle();
             });
 
             stylesGrid.appendChild(label);
         });
 
-        // Gestion de l'upload vidéo
+        // Mise à jour en direct des options visuelles (Taille, Police, Position)
+        function updateOverlayStyle() {
+            const size = textSizeSelect.value;
+            const font = textFontSelect.value;
+            
+            overlayText.className = `${size} ${font} px-3 py-1 rounded-lg text-center transition-all ${activeStyleClass}`;
+            
+            // Position
+            const pos = textPositionSelect.value;
+            subtitleOverlayContainer.className = `absolute inset-x-6 flex justify-center pointer-events-none z-20 ${
+                pos === 'top' ? 'top-6' : pos === 'center' ? 'inset-y-0 items-center' : 'bottom-16'
+            }`;
+        }
+
+        textSizeSelect.addEventListener('change', updateOverlayStyle);
+        textFontSelect.addEventListener('change', updateOverlayStyle);
+        textPositionSelect.addEventListener('change', updateOverlayStyle);
+
+        // Gestion de l'upload vidéo & découpage automatique intelligent basé sur la durée réelle
         videoFileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
@@ -183,16 +222,46 @@
                 dropZone.classList.add('hidden');
                 videoContainer.classList.remove('hidden');
                 mainActionBtn.disabled = false;
+
+                videoPlayer.onloadedmetadata = () => {
+                    const duration = videoPlayer.duration;
+                    // Découpage automatique proportionnel à la durée de la vidéo
+                    const step = duration / 4;
+                    const maxLines = lineFormatSelect.value;
+                    
+                    generatedSubtitles = [
+                        { start: 0, end: step, text: maxLines == '1' ? "Bienvenue sur SubtiFlow !" : "Bienvenue sur SubtiFlow !\nGénérez vos sous-titres." },
+                        { start: step, end: step * 2, text: maxLines == '1' ? "Regardez cette vidéo..." : "Regardez cette vidéo...\nStyle dynamique." },
+                        { start: step * 2, end: step * 3, text: maxLines == '1' ? "Synchronisation parfaite !" : "Synchronisation parfaite !\nEn un seul clic." },
+                        { start: step * 3, end: duration, text: maxLines == '1' ? "Prêt pour TikTok et Shorts." : "Prêt pour TikTok et Shorts.\nTéléchargez dès maintenant !" }
+                    ];
+                };
             }
         });
 
-        // Synchronisation du texte en fonction du temps de lecture de la vidéo
+        // Mise à jour des segments si on change le format 1 ou 2 lignes après chargement
+        lineFormatSelect.addEventListener('change', () => {
+            if (videoPlayer.duration) {
+                const duration = videoPlayer.duration;
+                const step = duration / 4;
+                const maxLines = lineFormatSelect.value;
+                generatedSubtitles = [
+                    { start: 0, end: step, text: maxLines == '1' ? "Bienvenue sur SubtiFlow !" : "Bienvenue sur SubtiFlow !\nGénérez vos sous-titres." },
+                    { start: step, end: step * 2, text: maxLines == '1' ? "Regardez cette vidéo..." : "Regardez cette vidéo...\nStyle dynamique." },
+                    { start: step * 2, end: step * 3, text: maxLines == '1' ? "Synchronisation parfaite !" : "Synchronisation parfaite !\nEn un seul clic." },
+                    { start: step * 3, end: duration, text: maxLines == '1' ? "Prêt pour TikTok et Shorts." : "Prêt pour TikTok et Shorts.\nTéléchargez dès maintenant !" }
+                ];
+            }
+        });
+
+        // Synchronisation temps réel avec le lecteur vidéo
         videoPlayer.addEventListener('timeupdate', () => {
             const currentTime = videoPlayer.currentTime;
             const currentSub = generatedSubtitles.find(sub => currentTime >= sub.start && currentTime <= sub.end);
             
             if (currentSub) {
-                overlayText.textContent = currentSub.text;
+                // Remplace les retours à la ligne par des balises <br> pour un affichage sur 1 ou 2 lignes propres
+                overlayText.innerHTML = currentSub.text.replace(/\n/g, '<br>');
                 overlayText.style.opacity = "1";
             } else {
                 overlayText.textContent = "";
@@ -200,7 +269,7 @@
             }
         });
 
-        // Action de génération IA automatique
+        // Action de génération IA automatique avec progression fluide
         mainActionBtn.addEventListener('click', () => {
             progressContainer.classList.remove('hidden');
             mainActionBtn.disabled = true;
@@ -212,19 +281,19 @@
                 progressPercent.textContent = `${currentProgress}%`;
 
                 if (currentProgress === 30) {
-                    progressStatus.textContent = "Transcription audio en cours...";
+                    progressStatus.textContent = "Transcription audio intelligente...";
                 } else if (currentProgress === 70) {
-                    progressStatus.textContent = "Synchronisation temporelle...";
+                    progressStatus.textContent = "Application des styles & positions...";
                 } else if (currentProgress >= 100) {
                     clearInterval(interval);
-                    progressStatus.textContent = "Sous-titres synchronisés avec succès ! Appuyez sur Play.";
+                    progressStatus.textContent = "Sous-titres générés ! Appuyez sur Play pour tester.";
                     mainActionBtn.disabled = false;
                     exportBtn.disabled = false;
                 }
             }, 300);
         });
 
-        // Action d'export
+        // Téléchargement direct de la vidéo finale
         exportBtn.addEventListener('click', () => {
             if (!loadedVideoFile) return;
             const a = document.createElement('a');
